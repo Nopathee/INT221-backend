@@ -1,8 +1,8 @@
 package com.example.int221backend.entities;
 
 public enum TaskStatus {
-    NoStatus,
-    ToDo,
+    No_Status,
+    To_Do,
     Doing,
     Done
 }
