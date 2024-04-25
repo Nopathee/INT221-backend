@@ -10,5 +10,5 @@ public class SimpleTaskDTO {
     private Integer taskId;
     private String taskTitle;
     private String assignees;
-    private TaskStatus status;
+    private String status;
 }
