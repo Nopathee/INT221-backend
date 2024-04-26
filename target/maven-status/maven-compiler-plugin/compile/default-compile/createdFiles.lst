@@ -1,0 +1,9 @@
+com/example/int221backend/controllers/TaskController.class
+com/example/int221backend/entities/TaskStatus.class
+com/example/int221backend/repositories/TaskRepository.class
+com/example/int221backend/services/TaskService.class
+com/example/int221backend/ApplicationConfig.class
+com/example/int221backend/services/TaskService$1.class
+com/example/int221backend/Int221BackendApplication.class
+com/example/int221backend/dtos/SimpleTaskDTO.class
+com/example/int221backend/entities/Task.class
