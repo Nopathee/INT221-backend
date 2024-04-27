@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Getter
@@ -32,11 +33,11 @@ public class Task {
 
     @Column(name = "created_on", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdOn;
+    private ZonedDateTime createdOn;
 
     @Column(name = "updated_on", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedOn;
+    private ZonedDateTime updatedOn;
 
     // Constructors, getters, and setters
 
