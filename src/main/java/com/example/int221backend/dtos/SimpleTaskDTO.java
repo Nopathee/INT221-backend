@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SimpleTaskDTO {
-    private Integer taskId;
+    private String taskId;
     private String taskTitle;
     private String assignees;
     private String status;
