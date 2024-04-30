@@ -27,9 +27,9 @@ public class Task {
     @Column(name = "task_assignees", length = 30)
     private String assignees;
 
-//    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING)
     @Column(name = "task_status", nullable = false)
-    private String status;
+    private TaskStatus status;
 
     @Column(name = "created_on", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Temporal(TemporalType.TIMESTAMP)
