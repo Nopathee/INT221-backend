@@ -42,4 +42,14 @@ public class TaskController {
     public Task getTaskById(@PathVariable Integer id){
         return service.getTaskById(id);
     }
+
+    @PostMapping("")
+    public Task addTask(@RequestBody Task task){
+        return service.addTask(task);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteTask(@PathVariable Integer id){
+        service.deleteTask(id);
+    }
 }
