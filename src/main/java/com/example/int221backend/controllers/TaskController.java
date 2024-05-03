@@ -7,6 +7,7 @@ import com.example.int221backend.entities.TaskStatus;
 import com.example.int221backend.services.TaskService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,8 +47,10 @@ public class TaskController {
     }
 
     @PostMapping("")
-    public AddTaskDTO addTask(@RequestBody AddTaskDTO addTaskDTO) {
-        return service.addTask(addTaskDTO);
+    public ResponseEntity<AddTaskDTO> addTask(@RequestBody AddTaskDTO addTaskDTO) {
+        AddTaskDTO newTask = service.addTask(addTaskDTO);
+
+        return new ResponseEntity<>(newTask, HttpStatus.CREATED);
     }
 
 
