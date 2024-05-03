@@ -15,7 +15,7 @@ import java.util.Date;
 public class Task {
 
     @Id
-    @Column(name = "task_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String id;
 
     @Column(name = "task_title", nullable = false, length = 100)
@@ -31,12 +31,10 @@ public class Task {
     @Column(name = "task_status", nullable = false)
     private TaskStatus status;
 
-    @Column(name = "created_on", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "created_on", nullable = false, updatable = false, insertable = false)
     private ZonedDateTime createdOn;
 
-    @Column(name = "updated_on", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
-    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "updated_on", nullable = false, insertable = false )
     private ZonedDateTime updatedOn;
 
     // Constructors, getters, and setters

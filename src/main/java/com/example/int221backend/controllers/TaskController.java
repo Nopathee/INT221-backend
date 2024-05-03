@@ -1,7 +1,9 @@
 package com.example.int221backend.controllers;
 
+import com.example.int221backend.dtos.AddTaskDTO;
 import com.example.int221backend.dtos.SimpleTaskDTO;
 import com.example.int221backend.entities.Task;
+import com.example.int221backend.entities.TaskStatus;
 import com.example.int221backend.services.TaskService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,9 +46,10 @@ public class TaskController {
     }
 
     @PostMapping("")
-    public Task addTask(@RequestBody Task task){
-        return service.addTask(task);
+    public AddTaskDTO addTask(@RequestBody AddTaskDTO addTaskDTO) {
+        return service.addTask(addTaskDTO);
     }
+
 
     @DeleteMapping("/{id}")
     public void deleteTask(@PathVariable Integer id){
