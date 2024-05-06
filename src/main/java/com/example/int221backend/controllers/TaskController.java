@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 import java.util.Objects;
@@ -57,5 +58,16 @@ public class TaskController {
     @DeleteMapping("/{id}")
     public void deleteTask(@PathVariable Integer id){
         service.deleteTask(id);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AddTaskDTO> updateTask(@PathVariable Integer id, @RequestBody AddTaskDTO task){
+        try {
+             AddTaskDTO updatedTask = service.updateTask(task,id);
+
+             return ResponseEntity.ok(updatedTask);
+        }catch (HttpClientErrorException e){
+            return ResponseEntity.status(e.getStatusCode()).body(null);
+        }
     }
 }

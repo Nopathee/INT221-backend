@@ -26,19 +26,38 @@ public class TaskService {
     }
 
     public Task getTaskById(Integer id) {
-        return repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + id + "DOES NOT EXIST !!!") {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + id + "DOES NOT EXIST !!!") {
         });
     }
 
     @Transactional
     public AddTaskDTO addTask(AddTaskDTO addTaskDTO) {
-        Task task = modelMapper.map(addTaskDTO,Task.class);
-        return modelMapper.map(repository.saveAndFlush(task),addTaskDTO.getClass());
+        Task task = modelMapper.map(addTaskDTO, Task.class);
+        return modelMapper.map(repository.saveAndFlush(task), addTaskDTO.getClass());
     }
 
     @Transactional
     public void deleteTask(Integer taskId) {
-        Task task = repository.findById(taskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + taskId + "DOES NOT EXiTS!!!"));
+        Task task = repository.findById(taskId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + taskId + "DOES NOT EXiTS!!!"));
         repository.delete(task);
+    }
+
+    @Transactional
+    public AddTaskDTO updateTask(AddTaskDTO addTaskDTO, Integer taskId) {
+        if (addTaskDTO == null || addTaskDTO.getTitle() == null || addTaskDTO.getTitle().trim().isEmpty()){
+            throw new IllegalArgumentException("TITLE IS REQUIRED!!!");
+        }
+        Task existingTask = repository.findById(taskId)
+                .orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND,"TASK ID " + taskId + " DOES NOT EXIST!!!"));
+
+        String id = existingTask.getId();
+        modelMapper.map(addTaskDTO,existingTask);
+        existingTask.setId(id);
+        Task updatedTask = repository.saveAndFlush(existingTask);
+        AddTaskDTO updatedTaskDTO = modelMapper.map(updatedTask,AddTaskDTO.class);
+
+        return updatedTaskDTO;
     }
 }
