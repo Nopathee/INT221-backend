@@ -49,6 +49,22 @@ public class TaskController {
 
     @PostMapping("")
     public ResponseEntity<AddTaskDTO> addTask(@RequestBody AddTaskDTO addTaskDTO) {
+        if (addTaskDTO.getStatus() == null) {
+            addTaskDTO.setStatus(TaskStatus.NO_STATUS.toString());
+        }
+
+        if (addTaskDTO.getTitle() != null) {
+            addTaskDTO.setTitle(addTaskDTO.getTitle().trim());
+        }
+
+        if (addTaskDTO.getDescription() != null){
+            addTaskDTO.setDescription(addTaskDTO.getDescription().trim());
+        }
+
+        if (addTaskDTO.getAssignees() != null){
+            addTaskDTO.setAssignees(addTaskDTO.getAssignees().trim());
+        }
+
         AddTaskDTO newTask = service.addTask(addTaskDTO);
 
         return new ResponseEntity<>(newTask, HttpStatus.CREATED);
@@ -63,6 +79,18 @@ public class TaskController {
     @PutMapping("/{id}")
     public ResponseEntity<AddTaskDTO> updateTask(@PathVariable Integer id, @RequestBody AddTaskDTO task){
         try {
+            if (task.getTitle() != null) {
+                task.setTitle(task.getTitle().trim());
+            }
+
+            if (task.getDescription() != null){
+                task.setDescription(task.getDescription().trim());
+            }
+
+            if (task.getAssignees() != null){
+                task.setAssignees(task.getAssignees().trim());
+            }
+
              AddTaskDTO updatedTask = service.updateTask(task,id);
 
              return ResponseEntity.ok(updatedTask);
