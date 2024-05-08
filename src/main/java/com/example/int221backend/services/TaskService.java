@@ -1,7 +1,9 @@
 package com.example.int221backend.services;
 
 import com.example.int221backend.dtos.AddTaskDTO;
+import com.example.int221backend.entities.Status;
 import com.example.int221backend.entities.Task;
+import com.example.int221backend.repositories.StatusRepository;
 import com.example.int221backend.repositories.TaskRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,9 @@ public class TaskService {
     @Autowired
     private TaskRepository repository;
 
+    @Autowired
+    private StatusRepository statusRepository;
+
     public List<Task> getAllTask() {
         return repository.findAll();
     }
@@ -28,12 +33,21 @@ public class TaskService {
     public Task getTaskById(Integer id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + id + "DOES NOT EXIST !!!") {
-        });
+                });
     }
 
     @Transactional
     public AddTaskDTO addTask(AddTaskDTO addTaskDTO) {
+
+        if (addTaskDTO.getStatus() == null) {
+            throw new IllegalArgumentException("Status ID is required for add a task.");
+        }
+
+        Status status = statusRepository.findById(addTaskDTO.getStatus())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Status with ID " + addTaskDTO.getStatus() + " not found."));
         Task task = modelMapper.map(addTaskDTO, Task.class);
+        task.setStatus(status);
+
         return modelMapper.map(repository.saveAndFlush(task), addTaskDTO.getClass());
     }
 
@@ -46,18 +60,25 @@ public class TaskService {
 
     @Transactional
     public AddTaskDTO updateTask(AddTaskDTO addTaskDTO, Integer taskId) {
-        if (addTaskDTO == null || addTaskDTO.getTitle() == null || addTaskDTO.getTitle().trim().isEmpty()){
+        if (addTaskDTO == null || addTaskDTO.getTitle() == null || addTaskDTO.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("TITLE IS REQUIRED!!!");
         }
         Task existingTask = repository.findById(taskId)
-                .orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND,"TASK ID " + taskId + " DOES NOT EXIST!!!"));
+                .orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND, "TASK ID " + taskId + " DOES NOT EXIST!!!"));
+
+        if (addTaskDTO.getStatus() == null) {
+            throw new IllegalArgumentException("Status id is required");
+        }
+
+        Status status = statusRepository.findById(addTaskDTO.getStatus())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Status with ID " + addTaskDTO.getStatus() + " not found."));
 
         String id = existingTask.getId();
-        modelMapper.map(addTaskDTO,existingTask);
+        modelMapper.map(addTaskDTO, existingTask);
         existingTask.setId(id);
+        existingTask.setStatus(status);
         Task updatedTask = repository.saveAndFlush(existingTask);
-        AddTaskDTO updatedTaskDTO = modelMapper.map(updatedTask,AddTaskDTO.class);
 
-        return updatedTaskDTO;
+        return modelMapper.map(updatedTask, AddTaskDTO.class);
     }
 }
