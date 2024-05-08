@@ -27,9 +27,9 @@ public class Task {
     @Column(name = "task_assignees", length = 30)
     private String assignees;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "task_status")
-    private TaskStatus status;
+    @ManyToOne
+    @JoinColumn(name = "task_status_id", referencedColumnName = "id")
+    private Status status;
 
     @Column(name = "created_on", nullable = false, updatable = false, insertable = false)
     private ZonedDateTime createdOn;
