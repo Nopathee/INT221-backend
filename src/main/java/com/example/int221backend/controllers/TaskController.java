@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = {"http://localhost:5173","http://localhost:4173","http://ip23ssi3.sit.kmutt.ac.th"})
+@CrossOrigin(origins = {"http://localhost:5173","http://ip23ssi3.sit.kmutt.ac.th"})
 @RestController
 @RequestMapping("v1/tasks")
 public class TaskController {

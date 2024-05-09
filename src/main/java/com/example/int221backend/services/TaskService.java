@@ -47,7 +47,7 @@ public class TaskService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Status with ID " + addTaskDTO.getStatus() + " not found."));
         Task task = modelMapper.map(addTaskDTO, Task.class);
         task.setStatus(status);
-
+        
         return modelMapper.map(repository.saveAndFlush(task), addTaskDTO.getClass());
     }
 

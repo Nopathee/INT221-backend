@@ -8,6 +8,7 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 
+@CrossOrigin(origins = {"http://localhost:5173","http://ip23ssi3.sit.kmutt.ac.th"})
 @RestController
 @RequestMapping("v2/statuses")
 public class StatusController {
