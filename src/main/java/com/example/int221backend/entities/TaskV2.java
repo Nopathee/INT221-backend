@@ -3,16 +3,14 @@ package com.example.int221backend.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "tasks")
-public class Task {
+@Table(name = "tasksV2")
+public class TaskV2 {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,9 +25,9 @@ public class Task {
     @Column(name = "task_assignees", length = 30)
     private String assignees;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "task_status")
-    private TaskStatus status;
+    @ManyToOne
+    @JoinColumn(name = "task_status_id", referencedColumnName = "id")
+    private Status status;
 
     @Column(name = "created_on", nullable = false, updatable = false, insertable = false)
     private ZonedDateTime createdOn;

@@ -2,8 +2,9 @@ package com.example.int221backend.services;
 
 import com.example.int221backend.entities.Status;
 import com.example.int221backend.entities.Task;
+import com.example.int221backend.entities.TaskV2;
 import com.example.int221backend.repositories.StatusRepository;
-import com.example.int221backend.repositories.TaskRepository;
+import com.example.int221backend.repositories.TaskV2Repository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,7 @@ public class StatusService {
     private StatusRepository repository;
 
     @Autowired
-    private TaskRepository taskRepository;
+    private TaskV2Repository taskRepository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -28,6 +29,7 @@ public class StatusService {
     public List<Status> getAllStatus(){
         return repository.findAll();
     }
+
 
     @Transactional
     public Status addStatus(Status status) {
@@ -61,12 +63,12 @@ public class StatusService {
         Status status = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"STATUS ID " + id + " DOES NOT EXIST!!!"));
 
-        List<Task> tasks = taskRepository.findByStatusId(id);
+        List<TaskV2> tasks = taskRepository.findByStatusId(id);
 
         Status newStatus = repository.findById(newId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"NEW STATUS ID " + newId + " DOES NOT EXIST!!!"));
 
-        for (Task task : tasks){
+        for (TaskV2 task : tasks){
             task.setStatus(newStatus);
         }
 

@@ -1,7 +1,5 @@
 package com.example.int221backend;
 
-import com.example.int221backend.dtos.AddTaskDTO;
-import com.example.int221backend.entities.Task;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
