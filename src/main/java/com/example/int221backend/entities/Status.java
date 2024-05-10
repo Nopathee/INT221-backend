@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.ZonedDateTime;
+
 @Getter
 @Setter
 @Entity
@@ -18,4 +20,10 @@ public class Status {
 
     @Column(name = "statusDescription", nullable = false ,length = 200)
     private String description;
+
+    @Column(name = "created_on", nullable = false, updatable = false, insertable = false)
+    private ZonedDateTime createdOn;
+
+    @Column(name = "updated_on", nullable = false, insertable = false )
+    private ZonedDateTime updatedOn;
 }
