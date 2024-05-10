@@ -37,9 +37,9 @@ public class StatusController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AddStatusDTO> editStatus(@PathVariable String id, @RequestBody AddStatusDTO addStatusDTO) {
+    public ResponseEntity<Status> editStatus(@PathVariable String id, @RequestBody Status addStatusDTO) {
         try {
-            AddStatusDTO editedStatus = service.editStatus(addStatusDTO,id);
+            Status editedStatus = service.editStatus(addStatusDTO,id);
 
             return ResponseEntity.ok(editedStatus);
         }catch (HttpClientErrorException e){

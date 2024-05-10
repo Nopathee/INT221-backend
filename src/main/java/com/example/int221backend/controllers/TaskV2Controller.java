@@ -3,6 +3,7 @@ package com.example.int221backend.controllers;
 import com.example.int221backend.dtos.*;
 import com.example.int221backend.dtos.AddTaskV2DTO;
 import com.example.int221backend.entities.Status;
+import com.example.int221backend.entities.Task;
 import com.example.int221backend.entities.TaskV2;
 import com.example.int221backend.entities.TaskStatus;
 import com.example.int221backend.repositories.StatusRepository;
@@ -101,7 +102,9 @@ public class TaskV2Controller {
 
             String status = task.getStatus();
 
-             AddTaskV2DTO updatedTask = service.updateTask(task,id,status);
+            TaskV2 editedTask = modelMapper.map(task,TaskV2.class);
+
+             AddTaskV2DTO updatedTask = service.updateTask(editedTask,id,status);
 
              return ResponseEntity.ok(updatedTask);
         }catch (HttpClientErrorException e){

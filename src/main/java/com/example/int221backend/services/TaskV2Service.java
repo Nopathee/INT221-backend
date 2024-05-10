@@ -67,7 +67,7 @@ public class TaskV2Service {
     }
 
     @Transactional
-    public AddTaskV2DTO updateTask(AddTaskDTO addTaskDTO, Integer taskId , String statusId){
+    public AddTaskV2DTO updateTask(TaskV2 addTaskDTO, Integer taskId , String statusId){
         final String finalStatusId;
 
         if (statusId == null) {

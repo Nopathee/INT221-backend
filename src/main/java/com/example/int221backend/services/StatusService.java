@@ -43,20 +43,20 @@ public class StatusService {
     }
 
     @Transactional
-    public AddStatusDTO editStatus(AddStatusDTO addStatusDTO, String statusId) {
-        if (statusId == null || addStatusDTO.getName() == null || addStatusDTO.getName().trim().isEmpty()) {
+    public Status editStatus(Status status, String statusId) {
+        if (statusId == null || status.getName() == null || status.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Name is REQUIRED!!!");
         }
         Status existingStatus = repository.findById(statusId)
                 .orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND, "Status ID " + statusId + " DOES NOT EXIST!!!"));
 
         String id = existingStatus.getId();
-        modelMapper.map(addStatusDTO, existingStatus);
+        modelMapper.map(status, existingStatus);
         existingStatus.setId(id);
         Status editedStatus = repository.saveAndFlush(existingStatus);
-        AddStatusDTO editedStatusDTO = modelMapper.map(editedStatus,AddStatusDTO.class);
+//        AddStatusDTO editedStatusDTO = modelMapper.map(editedStatus,AddStatusDTO.class);
 
-        return editedStatusDTO;
+        return editedStatus;
     }
 
     @Transactional

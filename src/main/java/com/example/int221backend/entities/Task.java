@@ -31,10 +31,10 @@ public class Task {
     @Column(name = "task_status")
     private TaskStatus status;
 
-    @Column(name = "created_on", nullable = false, updatable = false, insertable = false)
+    @Column(name = "created_on", updatable = false, insertable = false)
     private ZonedDateTime createdOn;
 
-    @Column(name = "updated_on", nullable = false, insertable = false )
+    @Column(name = "updated_on", insertable = false,updatable = false)
     private ZonedDateTime updatedOn;
 
     // Constructors, getters, and setters
