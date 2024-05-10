@@ -18,7 +18,7 @@ public class Status {
     @Column(name = "statusName" , nullable = false , length = 50)
     private String name;
 
-    @Column(name = "statusDescription", nullable = false ,length = 200)
+    @Column(name = "statusDescription" ,length = 200)
     private String description;
 
     @Column(name = "created_on", nullable = false, updatable = false, insertable = false)
