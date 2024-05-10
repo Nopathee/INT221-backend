@@ -1,5 +1,6 @@
 package com.example.int221backend.services;
 
+import com.example.int221backend.dtos.AddStatusDTO;
 import com.example.int221backend.entities.Status;
 import com.example.int221backend.entities.Task;
 import com.example.int221backend.entities.TaskV2;
@@ -30,25 +31,32 @@ public class StatusService {
         return repository.findAll();
     }
 
-
-    @Transactional
-    public Status addStatus(Status status) {
-        return repository.save(status);
+    public Status getStatusById(String id){
+        return repository.findById(id)
+                .orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
     }
 
     @Transactional
-    public Status editStatus(Status status, String statusId) {
-        if (statusId == null || status.getName() == null || status.getName().trim().isEmpty()) {
+    public AddStatusDTO addStatus(AddStatusDTO addStatusDTO) {
+        Status status = modelMapper.map(addStatusDTO, Status.class);
+        return modelMapper.map(repository.saveAndFlush(status), addStatusDTO.getClass() );
+    }
+
+    @Transactional
+    public AddStatusDTO editStatus(AddStatusDTO addStatusDTO, String statusId) {
+        if (statusId == null || addStatusDTO.getName() == null || addStatusDTO.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Name is REQUIRED!!!");
         }
-        Status existingStatus = repository.findById(statusId).orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND, "Status ID " + statusId + " DOES NOT EXIST!!!"));
+        Status existingStatus = repository.findById(statusId)
+                .orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND, "Status ID " + statusId + " DOES NOT EXIST!!!"));
 
         String id = existingStatus.getId();
-        modelMapper.map(status, existingStatus);
+        modelMapper.map(addStatusDTO, existingStatus);
         existingStatus.setId(id);
         Status editedStatus = repository.saveAndFlush(existingStatus);
+        AddStatusDTO editedStatusDTO = modelMapper.map(editedStatus,AddStatusDTO.class);
 
-        return editedStatus;
+        return editedStatusDTO;
     }
 
     @Transactional

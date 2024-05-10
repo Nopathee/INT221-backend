@@ -83,29 +83,6 @@ public class TaskV2Controller {
         service.deleteTask(id);
     }
 
-//    @PutMapping("/{id}")
-//    public ResponseEntity<AddTaskV2DTO> updateTask(@PathVariable Integer id, @RequestBody AddTaskV2DTO task){
-//        try {
-//            if (task.getTitle() != null) {
-//                task.setTitle(task.getTitle().trim());
-//            }
-//
-//            if (task.getDescription() != null){
-//                task.setDescription(task.getDescription().trim());
-//            }
-//
-//            if (task.getAssignees() != null){
-//                task.setAssignees(task.getAssignees().trim());
-//            }
-//
-//             AddTaskV2DTO updatedTask = service.updateTask(task,id);
-//
-//             return ResponseEntity.ok(updatedTask);
-//        }catch (HttpClientErrorException e){
-//            return ResponseEntity.status(e.getStatusCode()).body(null);
-//        }
-//    }
-
 
     @PutMapping("/{id}")
     public ResponseEntity<AddTaskV2DTO> updateTask(@PathVariable Integer id, @RequestBody AddTaskDTO task){

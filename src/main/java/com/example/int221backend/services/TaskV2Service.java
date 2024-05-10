@@ -33,8 +33,7 @@ public class TaskV2Service {
 
     public TaskV2 getTaskById(Integer id) {
         return repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + id + "DOES NOT EXIST !!!") {
-                });
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + id + "DOES NOT EXIST !!!"));
     }
 
     @Transactional
@@ -66,30 +65,6 @@ public class TaskV2Service {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + taskId + "DOES NOT EXiTS!!!"));
         repository.delete(task);
     }
-
-//    @Transactional
-//    public AddTaskV2DTO updateTask(AddTaskV2DTO addTaskDTO, Integer taskId) {
-//        if (addTaskDTO == null || addTaskDTO.getTitle() == null || addTaskDTO.getTitle().trim().isEmpty()) {
-//            throw new IllegalArgumentException("TITLE IS REQUIRED!!!");
-//        }
-//        TaskV2 existingTask = repository.findById(taskId)
-//                .orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND, "TASK ID " + taskId + " DOES NOT EXIST!!!"));
-//
-//        if (addTaskDTO.getStatus() == null) {
-//            throw new IllegalArgumentException("Status id is required");
-//        }
-//
-//        Status status = statusRepository.findById(addTaskDTO.getStatus())
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Status with ID " + addTaskDTO.getStatus() + " not found."));
-//
-//        String id = existingTask.getId();
-//        modelMapper.map(addTaskDTO, existingTask);
-//        existingTask.setId(id);
-//        existingTask.setStatus(status);
-//        TaskV2 updatedTask = repository.saveAndFlush(existingTask);
-//
-//        return modelMapper.map(updatedTask, AddTaskV2DTO.class);
-//    }
 
     @Transactional
     public AddTaskV2DTO updateTask(AddTaskDTO addTaskDTO, Integer taskId , String statusId){
