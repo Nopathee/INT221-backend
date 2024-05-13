@@ -13,7 +13,7 @@ import java.time.ZonedDateTime;
 public class Status {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Integer id;
 
     @Column(name = "statusName" , nullable = false , length = 50)
     private String name;

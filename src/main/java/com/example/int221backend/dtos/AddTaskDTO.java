@@ -13,5 +13,5 @@ public class AddTaskDTO {
     private String title;
     private String description;
     private String assignees;
-    private String status;
+    private Integer status;
 }

@@ -15,7 +15,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = {"http://localhost:5173","http://localhost:4173","http://ip23ssi3.sit.kmutt.ac.th"})
+@CrossOrigin(origins = {"http://localhost:5173","http://ip23ssi3.sit.kmutt.ac.th","http://intproj23.sit.kmutt.ac.th"})
 @RestController
 @RequestMapping("v1/tasks")
 public class TaskController {
@@ -49,7 +49,7 @@ public class TaskController {
     @PostMapping("")
     public ResponseEntity<AddTaskDTO> addTask(@RequestBody AddTaskDTO addTaskDTO) {
         if (addTaskDTO.getStatus() == null) {
-            addTaskDTO.setStatus(TaskStatus.NO_STATUS.toString());
+            addTaskDTO.setStatus(1);
         }
 
         if (addTaskDTO.getTitle() != null) {

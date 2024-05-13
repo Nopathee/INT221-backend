@@ -31,9 +31,9 @@ public class StatusService {
         return repository.findAll();
     }
 
-    public Status getStatusById(String id){
+    public Status getStatusById(Integer id){
         return repository.findById(id)
-                .orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
     }
 
     @Transactional
@@ -43,14 +43,19 @@ public class StatusService {
     }
 
     @Transactional
-    public Status editStatus(Status status, String statusId) {
+    public Status editStatus(Status status, Integer statusId) {
         if (statusId == null || status.getName() == null || status.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Name is REQUIRED!!!");
         }
+
+        if (statusId == 1){
+            return getStatusById(statusId);
+        }
+
         Status existingStatus = repository.findById(statusId)
                 .orElseThrow(() -> new HttpClientErrorException(HttpStatus.NOT_FOUND, "Status ID " + statusId + " DOES NOT EXIST!!!"));
 
-        String id = existingStatus.getId();
+        Integer id = existingStatus.getId();
         modelMapper.map(status, existingStatus);
         existingStatus.setId(id);
         Status editedStatus = repository.saveAndFlush(existingStatus);
@@ -60,14 +65,14 @@ public class StatusService {
     }
 
     @Transactional
-    public void deleteStatus(String id) {
+    public void deleteStatus(Integer id) {
         Status status = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
         repository.delete(status);
     }
 
     @Transactional
-    public void deleteAndTranStatus(String id, String newId){
+    public void deleteAndTranStatus(Integer id, Integer newId){
         Status status = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"STATUS ID " + id + " DOES NOT EXIST!!!"));
 

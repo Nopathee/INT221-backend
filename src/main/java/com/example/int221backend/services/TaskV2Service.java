@@ -37,12 +37,12 @@ public class TaskV2Service {
     }
 
     @Transactional
-    public AddTaskV2DTO addTask(AddTaskDTO addTaskV2DTO, String statusId){
+    public AddTaskV2DTO addTask(AddTaskDTO addTaskV2DTO, Integer statusId){
 
-        final String finalStatusId;
+        final Integer finalStatusId;
 
         if (statusId == null) {
-            finalStatusId = "1";
+            finalStatusId = 1;
         } else {
             finalStatusId = statusId;
         }
@@ -67,11 +67,11 @@ public class TaskV2Service {
     }
 
     @Transactional
-    public AddTaskV2DTO updateTask(TaskV2 addTaskDTO, Integer taskId , String statusId){
-        final String finalStatusId;
+    public AddTaskV2DTO updateTask(TaskV2 addTaskDTO, Integer taskId , Integer statusId){
+        final Integer finalStatusId;
 
         if (statusId == null) {
-            finalStatusId = "1";
+            finalStatusId = 1;
         } else {
             finalStatusId = statusId;
         }

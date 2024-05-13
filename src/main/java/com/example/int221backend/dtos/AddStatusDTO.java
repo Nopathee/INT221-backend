@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 @Data
 public class AddStatusDTO {
-    private String id;
+    private Integer id;
     private String name;
     private String description;
 }

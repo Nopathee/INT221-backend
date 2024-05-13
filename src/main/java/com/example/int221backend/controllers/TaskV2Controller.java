@@ -19,7 +19,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = {"http://localhost:5173","http://ip23ssi3.sit.kmutt.ac.th"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://ip23ssi3.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
 @RestController
 @RequestMapping("v2/tasks")
 public class TaskV2Controller {
@@ -31,18 +31,9 @@ public class TaskV2Controller {
 
     @Autowired
     private ModelMapper modelMapper;
-//    @Autowired
-//    private StatusRepository statusRepository;
-
-//    @GetMapping("")
-//    public ResponseEntity<Object> getAllTask(){
-//        List<Task> task = service.getAllTask();
-//        SimpleTaskDTO simpleTask = modelMapper.map(task, SimpleTaskDTO.class);
-//        return ResponseEntity.ok(simpleTask);
-//    }
 
     @GetMapping("")
-    public ResponseEntity<Object> getAllTask(){
+    public ResponseEntity<Object> getAllTask() {
         List<TaskV2> tasks = service.getAllTask();
         List<SimpleTaskV2DTO> simpleTaskV2DTOs = tasks.stream()
                 .map(task -> modelMapper.map(task, SimpleTaskV2DTO.class))
@@ -51,63 +42,84 @@ public class TaskV2Controller {
     }
 
     @GetMapping("/{id}")
-    public TaskV2 getTaskById(@PathVariable Integer id){
+    public TaskV2 getTaskById(@PathVariable Integer id) {
         return service.getTaskById(id);
     }
 
 
     @PostMapping("")
-    public ResponseEntity<AddTaskV2DTO> addTask(@RequestBody AddTaskDTO addTaskDTO){
+    public ResponseEntity<AddTaskV2DTO> addTask(@RequestBody AddTaskDTO addTaskDTO) {
 
         if (addTaskDTO.getTitle() != null) {
             addTaskDTO.setTitle(addTaskDTO.getTitle().trim());
         }
 
-        if (addTaskDTO.getDescription() != null){
-            addTaskDTO.setDescription(addTaskDTO.getDescription().trim());
+        if (addTaskDTO.getDescription() != null) {
+            if (addTaskDTO.getDescription().isEmpty()) {
+                addTaskDTO.setDescription(null);
+            } else {
+                addTaskDTO.setDescription(addTaskDTO.getDescription().trim());
+            }
+
         }
 
-        if (addTaskDTO.getAssignees() != null){
-            addTaskDTO.setAssignees(addTaskDTO.getAssignees().trim());
+        if (addTaskDTO.getAssignees() != null) {
+
+            if (addTaskDTO.getAssignees().isEmpty()) {
+                addTaskDTO.setAssignees(null);
+            } else {
+                addTaskDTO.setAssignees(addTaskDTO.getAssignees().trim());
+            }
         }
 
-        String status = addTaskDTO.getStatus();
 
-        AddTaskV2DTO newTask = service.addTask(addTaskDTO , status);
+        Integer status = addTaskDTO.getStatus();
 
-        return new ResponseEntity<>(newTask , HttpStatus.CREATED);
+        AddTaskV2DTO newTask = service.addTask(addTaskDTO, status);
+
+        return new ResponseEntity<>(newTask, HttpStatus.CREATED);
     }
 
 
     @DeleteMapping("/{id}")
-    public void deleteTask(@PathVariable Integer id){
+    public void deleteTask(@PathVariable Integer id) {
         service.deleteTask(id);
     }
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<AddTaskV2DTO> updateTask(@PathVariable Integer id, @RequestBody AddTaskDTO task){
+    public ResponseEntity<AddTaskV2DTO> updateTask(@PathVariable Integer id, @RequestBody AddTaskDTO task) {
         try {
             if (task.getTitle() != null) {
                 task.setTitle(task.getTitle().trim());
             }
 
-            if (task.getDescription() != null){
-                task.setDescription(task.getDescription().trim());
+            if (task.getDescription() != null) {
+                if (task.getDescription().isEmpty()) {
+                    task.setDescription(null);
+                } else {
+                    task.setDescription(task.getDescription().trim());
+                }
+
             }
 
-            if (task.getAssignees() != null){
-                task.setAssignees(task.getAssignees().trim());
+            if (task.getAssignees() != null) {
+
+                if (task.getAssignees().isEmpty()) {
+                    task.setAssignees(null);
+                } else {
+                    task.setAssignees(task.getAssignees().trim());
+                }
             }
 
-            String status = task.getStatus();
+            Integer status = task.getStatus();
 
-            TaskV2 editedTask = modelMapper.map(task,TaskV2.class);
+            TaskV2 editedTask = modelMapper.map(task, TaskV2.class);
 
-             AddTaskV2DTO updatedTask = service.updateTask(editedTask,id,status);
+            AddTaskV2DTO updatedTask = service.updateTask(editedTask, id, status);
 
-             return ResponseEntity.ok(updatedTask);
-        }catch (HttpClientErrorException e){
+            return ResponseEntity.ok(updatedTask);
+        } catch (HttpClientErrorException e) {
             return ResponseEntity.status(e.getStatusCode()).body(null);
         }
     }
