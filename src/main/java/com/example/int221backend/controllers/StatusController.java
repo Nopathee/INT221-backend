@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -47,40 +48,39 @@ public class StatusController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Status> editStatus(@PathVariable Integer id, @RequestBody Status addStatusDTO) {
-        try {
+    public ResponseEntity<?> editStatus(@PathVariable Integer id, @RequestBody Status addStatusDTO) {
 
-            if (addStatusDTO.getName() != null){
+            if (addStatusDTO.getName() != null) {
                 addStatusDTO.setName(addStatusDTO.getName().trim());
             }
 
-            if (addStatusDTO.getDescription() != null){
+            if (addStatusDTO.getDescription() != null) {
                 addStatusDTO.setDescription(addStatusDTO.getDescription().trim());
             }
 
-            if (id == 1) {
-//                Status oldStatus = service.getStatusById(id);
-//                return ResponseEntity.ok(oldStatus);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-            } else {
-                Status editedStatus = service.editStatus(addStatusDTO, id);
-                return ResponseEntity.ok(editedStatus);
-            }
-        }catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        } catch (HttpClientErrorException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(null);
-        }
+            Status editedStatus = service.editStatus(addStatusDTO, id);
+            return ResponseEntity.ok(editedStatus);
+
     }
 
     @DeleteMapping("/{id}")
-    public void deleteStatus(@PathVariable Integer id){
-        service.deleteStatus(id);
+    public ResponseEntity<?> deleteStatus(@PathVariable Integer id){
+        try {
+            service.deleteStatus(id);
+            return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        }
     }
 
     @DeleteMapping("/{id}/{newId}")
-    public void deleteAndTranStatus(@PathVariable Integer id,@PathVariable Integer newId){
-        service.deleteAndTranStatus(id,newId);
+    public ResponseEntity<?> deleteAndTranStatus(@PathVariable Integer id,@PathVariable Integer newId){
+        try {
+            service.deleteAndTranStatus(id, newId);
+            return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        }
     }
 
 }
