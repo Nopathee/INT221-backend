@@ -22,6 +22,9 @@ public class Status {
     @Column(name = "statusDescription" ,length = 200)
     private String description;
 
+    @Column(name = "color",length = 30)
+    private String color;
+
     @Column(name = "created_on", updatable = false, insertable = false)
     private ZonedDateTime createdOn;
 

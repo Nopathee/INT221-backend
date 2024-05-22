@@ -73,7 +73,7 @@ public class StatusService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Name must not be null");
         }
 
-        if (repository.existsByName(status.getName())) {
+        if (repository.existsByNameAndIdNot(status.getName(),statusId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name must be unique");
         }
 
@@ -86,7 +86,7 @@ public class StatusService {
             errorMessage.append("Description size must be between 0 and 200. ");
         }
 
-        if (errorMessage.length() > 0){
+        if (!errorMessage.isEmpty()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,errorMessage.toString());
         }
 
@@ -108,6 +108,7 @@ public class StatusService {
 
         existingStatus.setName(status.getName().trim());
         existingStatus.setDescription(status.getDescription() != null ? status.getDescription().trim() : null);
+        existingStatus.setColor(status.getColor() != null ? status.getColor().trim() : null);
         return repository.save(existingStatus);
     }
 
