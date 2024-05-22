@@ -48,6 +48,7 @@ public class TaskController {
 
     @PostMapping("")
     public ResponseEntity<AddTaskDTO> addTask(@RequestBody AddTaskDTO addTaskDTO) {
+
         if (addTaskDTO.getStatus() == null) {
             addTaskDTO.setStatus(1);
         }

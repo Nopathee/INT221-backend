@@ -32,24 +32,8 @@ public class StatusController {
     }
 
     @PostMapping("")
-    public ResponseEntity<AddStatusDTO> createStatus(@RequestBody AddStatusDTO addStatusDTO) {
-
-        if (addStatusDTO.getName() != null){
-            addStatusDTO.setName(addStatusDTO.getName().trim());
-        }
-
-        if (addStatusDTO.getDescription() != null){
-            addStatusDTO.setDescription(addStatusDTO.getDescription().trim());
-        }
-
-        AddStatusDTO newStatus = service.addStatus(addStatusDTO);
-
-        return new ResponseEntity<>(newStatus, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> editStatus(@PathVariable Integer id, @RequestBody Status addStatusDTO) {
-
+    public ResponseEntity<?> createStatus(@RequestBody AddStatusDTO addStatusDTO) {
+        try {
             if (addStatusDTO.getName() != null) {
                 addStatusDTO.setName(addStatusDTO.getName().trim());
             }
@@ -58,9 +42,30 @@ public class StatusController {
                 addStatusDTO.setDescription(addStatusDTO.getDescription().trim());
             }
 
-            Status editedStatus = service.editStatus(addStatusDTO, id);
-            return ResponseEntity.ok(editedStatus);
+            AddStatusDTO newStatus = service.addStatus(addStatusDTO);
 
+            return new ResponseEntity<>(newStatus, HttpStatus.CREATED);
+        }catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editStatus(@PathVariable Integer id, @RequestBody Status addStatusDTO) {
+            try {
+                if (addStatusDTO.getName() != null) {
+                    addStatusDTO.setName(addStatusDTO.getName().trim());
+                }
+
+                if (addStatusDTO.getDescription() != null) {
+                    addStatusDTO.setDescription(addStatusDTO.getDescription().trim());
+                }
+
+                Status editedStatus = service.editStatus(addStatusDTO, id);
+                return ResponseEntity.ok(editedStatus);
+            }catch (ResponseStatusException e){
+                return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+            }
     }
 
     @DeleteMapping("/{id}")
