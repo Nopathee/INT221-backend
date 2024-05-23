@@ -51,7 +51,7 @@ public class StatusService {
             errorMessage.append("Name size must be between 0 and 50. ");
         }
 
-        if (addStatusDTO.getDescription().length() > 200){
+        if (addStatusDTO.getDescription() != null && addStatusDTO.getDescription().length() > 200){
             errorMessage.append("Description size must be between 0 and 200. ");
         }
 
@@ -107,7 +107,7 @@ public class StatusService {
         }
 
         existingStatus.setName(status.getName().trim());
-        existingStatus.setDescription(status.getDescription() != null ? status.getDescription().trim() : null);
+        existingStatus.setDescription(status.getDescription() != null ? status.getDescription() : null);
         existingStatus.setColor(status.getColor() != null ? status.getColor().trim() : null);
         return repository.save(existingStatus);
     }
