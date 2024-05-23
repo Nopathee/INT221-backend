@@ -69,6 +69,14 @@ public class TaskV2Controller {
                 addTaskDTO.setAssignees(addTaskDTO.getAssignees().trim());
             }
 
+            if (addTaskDTO.getDescription().trim().isEmpty()){
+                addTaskDTO.setDescription(null);
+            }
+
+            if (addTaskDTO.getAssignees().trim().isEmpty()){
+                addTaskDTO.setAssignees(null);
+            }
+
             Integer status = addTaskDTO.getStatus();
 
             AddTaskV2DTO newTask = service.addTask(addTaskDTO, status);
