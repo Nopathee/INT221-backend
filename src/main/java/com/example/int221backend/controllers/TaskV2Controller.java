@@ -69,11 +69,11 @@ public class TaskV2Controller {
                 addTaskDTO.setAssignees(addTaskDTO.getAssignees().trim());
             }
 
-            if (addTaskDTO.getDescription().trim().isEmpty()){
+            if (addTaskDTO.getDescription() != null && addTaskDTO.getDescription().trim().isEmpty()){
                 addTaskDTO.setDescription(null);
             }
 
-            if (addTaskDTO.getAssignees().trim().isEmpty()){
+            if (addTaskDTO.getAssignees() != null && addTaskDTO.getAssignees().trim().isEmpty()){
                 addTaskDTO.setAssignees(null);
             }
 
