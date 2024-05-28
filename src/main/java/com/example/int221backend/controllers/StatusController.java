@@ -72,7 +72,7 @@ public class StatusController {
     public ResponseEntity<?> deleteStatus(@PathVariable Integer id){
         try {
             service.deleteStatus(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok().build();
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         }
@@ -82,7 +82,7 @@ public class StatusController {
     public ResponseEntity<?> deleteAndTranStatus(@PathVariable Integer id,@PathVariable Integer newId){
         try {
             service.deleteAndTranStatus(id, newId);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok().build();
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         }
