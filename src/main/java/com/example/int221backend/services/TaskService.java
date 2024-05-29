@@ -1,6 +1,7 @@
 package com.example.int221backend.services;
 
 import com.example.int221backend.dtos.AddTaskDTO;
+import com.example.int221backend.dtos.AddTaskV1DTO;
 import com.example.int221backend.entities.Task;
 import com.example.int221backend.repositories.TaskRepository;
 import org.modelmapper.ModelMapper;
@@ -32,11 +33,10 @@ public class TaskService {
     }
 
     @Transactional
-    public AddTaskDTO addTask(AddTaskDTO addTaskDTO) {
-        Task task = modelMapper.map(addTaskDTO, Task.class);
-        return modelMapper.map(repository.saveAndFlush(task), addTaskDTO.getClass());
+    public AddTaskV1DTO addTask(AddTaskV1DTO addTaskV1DTO) {
+        Task task = modelMapper.map(addTaskV1DTO, Task.class);
+        return modelMapper.map(repository.saveAndFlush(task), addTaskV1DTO.getClass());
     }
-
     @Transactional
     public void deleteTask(Integer taskId) {
         Task task = repository.findById(taskId)
@@ -45,7 +45,7 @@ public class TaskService {
     }
 
     @Transactional
-    public AddTaskDTO updateTask(AddTaskDTO addTaskDTO, Integer taskId) {
+    public AddTaskV1DTO updateTask(AddTaskV1DTO addTaskDTO, Integer taskId) {
         if (addTaskDTO == null || addTaskDTO.getTitle() == null || addTaskDTO.getTitle().trim().isEmpty()){
             throw new IllegalArgumentException("TITLE IS REQUIRED!!!");
         }
@@ -56,7 +56,7 @@ public class TaskService {
         modelMapper.map(addTaskDTO,existingTask);
         existingTask.setId(id);
         Task updatedTask = repository.saveAndFlush(existingTask);
-        AddTaskDTO updatedTaskDTO = modelMapper.map(updatedTask,AddTaskDTO.class);
+        AddTaskV1DTO updatedTaskDTO = modelMapper.map(updatedTask,AddTaskV1DTO.class);
 
         return updatedTaskDTO;
     }

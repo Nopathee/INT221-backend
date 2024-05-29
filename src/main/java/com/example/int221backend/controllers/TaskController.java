@@ -1,6 +1,7 @@
 package com.example.int221backend.controllers;
 
 import com.example.int221backend.dtos.AddTaskDTO;
+import com.example.int221backend.dtos.AddTaskV1DTO;
 import com.example.int221backend.dtos.SimpleTaskDTO;
 import com.example.int221backend.entities.Task;
 import com.example.int221backend.entities.TaskStatus;
@@ -47,10 +48,10 @@ public class TaskController {
     }
 
     @PostMapping("")
-    public ResponseEntity<AddTaskDTO> addTask(@RequestBody AddTaskDTO addTaskDTO) {
+    public ResponseEntity<AddTaskV1DTO> addTask(@RequestBody AddTaskV1DTO addTaskDTO) {
 
         if (addTaskDTO.getStatus() == null) {
-            addTaskDTO.setStatus(1);
+            addTaskDTO.setStatus(TaskStatus.NO_STATUS);
         }
 
         if (addTaskDTO.getTitle() != null) {
@@ -65,7 +66,7 @@ public class TaskController {
             addTaskDTO.setAssignees(addTaskDTO.getAssignees().trim());
         }
 
-        AddTaskDTO newTask = service.addTask(addTaskDTO);
+        AddTaskV1DTO newTask = service.addTask(addTaskDTO);
 
         return new ResponseEntity<>(newTask, HttpStatus.CREATED);
     }
@@ -77,7 +78,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AddTaskDTO> updateTask(@PathVariable Integer id, @RequestBody AddTaskDTO task){
+    public ResponseEntity<AddTaskV1DTO> updateTask(@PathVariable Integer id, @RequestBody AddTaskV1DTO task){
         try {
             if (task.getTitle() != null) {
                 task.setTitle(task.getTitle().trim());
@@ -91,7 +92,7 @@ public class TaskController {
                 task.setAssignees(task.getAssignees().trim());
             }
 
-            AddTaskDTO updatedTask = service.updateTask(task,id);
+            AddTaskV1DTO updatedTask = service.updateTask(task,id);
 
             return ResponseEntity.ok(updatedTask);
         }catch (HttpClientErrorException e){
