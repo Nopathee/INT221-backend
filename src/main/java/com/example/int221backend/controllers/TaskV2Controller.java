@@ -2,11 +2,7 @@ package com.example.int221backend.controllers;
 
 import com.example.int221backend.dtos.*;
 import com.example.int221backend.dtos.AddTaskV2DTO;
-import com.example.int221backend.entities.Status;
-import com.example.int221backend.entities.Task;
 import com.example.int221backend.entities.TaskV2;
-import com.example.int221backend.entities.TaskStatus;
-import com.example.int221backend.repositories.StatusRepository;
 import com.example.int221backend.services.StatusService;
 import com.example.int221backend.services.TaskV2Service;
 import org.modelmapper.ModelMapper;
@@ -14,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
