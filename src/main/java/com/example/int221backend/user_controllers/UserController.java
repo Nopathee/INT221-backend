@@ -1,9 +1,11 @@
 package com.example.int221backend.user_controllers;
 
+import com.example.int221backend.user_dtos.LoginUserDTO;
 import com.example.int221backend.user_services.UserService;
 import com.example.int221backend.user_entities.User;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,5 +24,15 @@ public class UserController {
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
+    }
+
+    @PostMapping("/user")
+    public ResponseEntity<Void> loginUser(@RequestBody LoginUserDTO loginUserDTO) {
+        boolean isValidUser = userService.validateUser(loginUserDTO.getUsername(), loginUserDTO.getPassword());
+        if (isValidUser) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 }
