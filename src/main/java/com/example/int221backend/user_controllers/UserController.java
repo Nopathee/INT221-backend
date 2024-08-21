@@ -1,6 +1,8 @@
 package com.example.int221backend.user_controllers;
 
+import com.example.int221backend.user_dtos.AuthResponseDTO;
 import com.example.int221backend.user_dtos.LoginUserDTO;
+import com.example.int221backend.user_services.JwtService;
 import com.example.int221backend.user_services.UserService;
 import com.example.int221backend.user_entities.User;
 import lombok.AllArgsConstructor;
@@ -19,6 +21,7 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    private JwtService jwtService;
 
     @GetMapping("/user")
     public ResponseEntity<List<User>> getAllUsers() {
@@ -34,5 +37,20 @@ public class UserController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
     }
+    @PostMapping("/authenticate")
+    public ResponseEntity<AuthResponseDTO> authenticateUser(@RequestBody LoginUserDTO loginUserDTO) {
+        boolean isValidUser = userService.validateUser(loginUserDTO.getUsername(), loginUserDTO.getPassword());
+        if (isValidUser) {
+            String token = jwtService.generateTokenForUser(loginUserDTO.getUsername());
+            String fullname = userService.getFullnameByUsername(loginUserDTO.getUsername());
+            AuthResponseDTO response = new AuthResponseDTO(token, fullname);
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
 }
+
