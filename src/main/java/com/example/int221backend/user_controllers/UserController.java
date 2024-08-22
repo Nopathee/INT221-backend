@@ -34,10 +34,13 @@ public class UserController {
         boolean isValidUser = userService.validateUser(loginUserDTO.getUsername(), loginUserDTO.getPassword());
         if (isValidUser) {
             return ResponseEntity.ok().build();
+        } else if (loginUserDTO.getUsername().isEmpty() || loginUserDTO.getPassword().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } else if (loginUserDTO.getUsername().length() > 50 || loginUserDTO.getPassword().length() > 14) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
     }
     @PostMapping("/authenticate")
     public ResponseEntity<AuthResponseDTO> authenticateUser(@RequestBody LoginUserDTO loginUserDTO) {
