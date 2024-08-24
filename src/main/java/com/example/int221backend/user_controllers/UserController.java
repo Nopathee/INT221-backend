@@ -2,13 +2,20 @@ package com.example.int221backend.user_controllers;
 
 import com.example.int221backend.user_dtos.AuthResponseDTO;
 import com.example.int221backend.user_dtos.LoginUserDTO;
+import com.example.int221backend.user_entities.UserRepository;
 import com.example.int221backend.user_services.JwtService;
 import com.example.int221backend.user_services.UserService;
 import com.example.int221backend.user_entities.User;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +28,15 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping("/user")
     public ResponseEntity<List<User>> getAllUsers() {
@@ -29,29 +44,21 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
-    @PostMapping("/user")
-    public ResponseEntity<Void> loginUser(@RequestBody LoginUserDTO loginUserDTO) {
-        boolean isValidUser = userService.validateUser(loginUserDTO.getUsername(), loginUserDTO.getPassword());
-        if (isValidUser) {
-            return ResponseEntity.ok().build();
-        } else if (loginUserDTO.getUsername().isEmpty() || loginUserDTO.getPassword().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } else if (loginUserDTO.getUsername().length() > 50 || loginUserDTO.getPassword().length() > 14) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-    }
-    @PostMapping("/authenticate")
-    public ResponseEntity<AuthResponseDTO> authenticateUser(@RequestBody LoginUserDTO loginUserDTO) {
-        boolean isValidUser = userService.validateUser(loginUserDTO.getUsername(), loginUserDTO.getPassword());
-        if (isValidUser) {
-            String token = jwtService.generateTokenForUser(loginUserDTO.getUsername());
-            String fullname = userService.getFullnameByUsername(loginUserDTO.getUsername());
-            AuthResponseDTO response = new AuthResponseDTO(token, fullname);
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    @PostMapping("")
+    public ResponseEntity<Object> login(@RequestBody @Valid LoginUserDTO jwtRequestUser) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(jwtRequestUser.getUsername(), jwtRequestUser.getPassword())
+            );
+
+            UserDetails userDetails = userService.loadUserByUsername(jwtRequestUser.getUsername());
+            String token = jwtService.generateToken(userRepository.findByUsername(userDetails.getUsername()));
+            AuthResponseDTO authResponse = new AuthResponseDTO(token);
+
+            return ResponseEntity.ok(authResponse);
+
+        } catch (BadCredentialsException ex) {
+            throw new BadCredentialsException ("User Password is incorrect !");
         }
     }
 

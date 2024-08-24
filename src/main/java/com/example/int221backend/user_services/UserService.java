@@ -1,5 +1,6 @@
 package com.example.int221backend.user_services;
 
+import com.example.int221backend.authen.AuthUser;
 import com.example.int221backend.user_entities.UserRepository;
 import com.example.int221backend.user_entities.User;
 
@@ -7,16 +8,18 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@AllArgsConstructor
-public class UserService {
+public class UserService implements UserDetailsService {
     @Autowired
-    private final UserRepository userRepository;
+    private UserRepository userRepository;
 
 
     public List<User> getAllUsers() {
@@ -31,14 +34,19 @@ public class UserService {
         }
         return false;
     }
-    public String getFullnameByUsername(String username) {
+
+    public User getUserByUserName(String username){
         User user = userRepository.findByUsername(username);
-        if (user != null) {
-            return user.getName(); // หรือโปรดเปลี่ยนให้ตรงกับการตั้งชื่อที่ใช้ใน User entity ของคุณ
-        }
-        throw new RuntimeException("User not found");
+        return user;
     }
 
-
-
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username);
+        if (user == null ){
+            throw new RuntimeException();
+        }
+        UserDetails userDetails = new AuthUser(username,user.getPassword());
+        return userDetails;
+    }
 }
