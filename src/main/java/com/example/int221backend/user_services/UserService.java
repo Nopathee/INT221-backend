@@ -1,6 +1,7 @@
 package com.example.int221backend.user_services;
 
 import com.example.int221backend.authen.AuthUser;
+import com.example.int221backend.exception.NotCreatedException;
 import com.example.int221backend.user_entities.UserRepository;
 import com.example.int221backend.user_entities.User;
 
@@ -44,7 +45,7 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username);
         if (user == null ){
-            throw new RuntimeException();
+            throw new NotCreatedException("Username or Password is incorrect");
         }
         UserDetails userDetails = new AuthUser(username,user.getPassword());
         return userDetails;

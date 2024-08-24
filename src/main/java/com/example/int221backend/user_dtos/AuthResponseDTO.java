@@ -8,5 +8,5 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 public class AuthResponseDTO {
-    private String token;
+    private String access_token;
 }

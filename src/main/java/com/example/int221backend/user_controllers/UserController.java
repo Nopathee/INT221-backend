@@ -48,10 +48,10 @@ public class UserController {
     public ResponseEntity<Object> login(@RequestBody @Valid LoginUserDTO jwtRequestUser) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(jwtRequestUser.getUsername(), jwtRequestUser.getPassword())
+                    new UsernamePasswordAuthenticationToken(jwtRequestUser.getUserName(), jwtRequestUser.getPassword())
             );
 
-            UserDetails userDetails = userService.loadUserByUsername(jwtRequestUser.getUsername());
+            UserDetails userDetails = userService.loadUserByUsername(jwtRequestUser.getUserName());
             String token = jwtService.generateToken(userRepository.findByUsername(userDetails.getUsername()));
             AuthResponseDTO authResponse = new AuthResponseDTO(token);
 

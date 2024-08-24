@@ -23,7 +23,7 @@ public class JwtService implements Serializable {
     private String SECRET_KEY;
     SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
-    @Value("#{${jwt.max-token-interval-hour}*60*60*1000}")
+    @Value("#{60*30*1000}")
     private long JWT_TOKEN_VALIDITY;
 
     public String getUsernameFromToken(String token) {
@@ -64,9 +64,9 @@ public class JwtService implements Serializable {
 
     private String doGenerateToken(Map<String, Object> claims) {
         return Jwts.builder()
-                .setHeaderParam("typ", "JWT")
+                .setHeaderParam("typ","JWT")
                 .setClaims(claims)
-                .setIssuer("https://intproj23.sit.kmutt.ac.th/ssa3/")
+                .setIssuer("https://intproj23.sit.kmutt.ac.th/ssi3/")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
                 .signWith(signatureAlgorithm, SECRET_KEY)
