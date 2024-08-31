@@ -31,27 +31,40 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         final String requestTokenHeader = request.getHeader("Authorization");
         String username = null;
         String jwtToken = null;
+
         if (requestTokenHeader != null) {
             if (requestTokenHeader.startsWith("Bearer ")) {
                 jwtToken = requestTokenHeader.substring(7);
+                if (jwtToken == null || !jwtToken.matches("[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+")) {
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT Token is not well-formed");
+                }
                 try {
                     username = jwtService.getUsernameFromToken(jwtToken);
-                } catch (IllegalArgumentException | ExpiredJwtException e) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT Token is invalid");
+                } catch (ExpiredJwtException e) {
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT Token has expired");
+                } catch (Exception e) {
+                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT Token is invalid");
                 }
             } else {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "JWT Token does not begin with Bearer String");
             }
+        } else {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No JWT Token provided");
         }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userService.loadUserByUsername(username);
             if (jwtService.validateToken(jwtToken, userDetails)) {
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                usernamePasswordAuthenticationToken.
-                        setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+            } else {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT Token is not valid");
             }
         }
-        filterChain.doFilter(request,response);
+
+        filterChain.doFilter(request, response);
     }
 }
+
