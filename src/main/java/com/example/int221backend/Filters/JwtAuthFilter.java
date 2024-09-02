@@ -16,84 +16,59 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
+@Component
+public class JwtAuthFilter extends OncePerRequestFilter {
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private JwtService jwtService;
 
-    @Component
-    public class JwtAuthFilter extends OncePerRequestFilter {
-        @Autowired
-        private UserService userService;
-        @Autowired
-        private JwtService jwtService;
-        private static final List<String> EXCLUDED_PATHS = Arrays.asList("/login", "/register", "/decode-token", "/v2/api-docs");
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        final String authorizationHeader = request.getHeader("Authorization");
+        String username = null;
+        String jwtToken = null;
 
-        @Override
-        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-            if (isExcludedPath(request)) {
-                filterChain.doFilter(request, response);
-                return;
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            jwtToken = authorizationHeader.substring(7);
+
+            if (!isValidJwtStructure(jwtToken)) {
+                System.out.println("Invalid JWT token structure");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid JWT token structure");
             }
 
-            final String jwtToken = extractJwtFromRequest(request);
-
-            if (jwtToken != null) {
-                try {
-                    processJwtAuthentication(request, jwtToken);
-                } catch (ExpiredJwtException e) {
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT Token has expired", e);
-                } catch (Exception e) {
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT Token is invalid", e);
-                }
-            } else {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No JWT Token provided");
+            try {
+                username = jwtService.getUsernameFromToken(jwtToken);
+                System.out.println("Username from token: " + username);
+            } catch (ExpiredJwtException e) {
+                System.out.println("JWT token is expired");
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT token is expired", e);
+            } catch (Exception e) {
+                System.out.println("Invalid JWT token");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid JWT token", e);
             }
-
-            filterChain.doFilter(request, response);
         }
 
-        private boolean isExcludedPath(HttpServletRequest request) {
-            return EXCLUDED_PATHS.contains(request.getServletPath());
-        }
-
-        private String extractJwtFromRequest(HttpServletRequest request) {
-            final String requestTokenHeader = request.getHeader("Authorization");
-
-            if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
-                String jwtToken = requestTokenHeader.substring(7);
-                if (isValidJwtStructure(jwtToken)) {
-                    return jwtToken;
-                } else {
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT Token is not well-formed");
-                }
-            } else if (requestTokenHeader != null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "JWT Token does not begin with Bearer String");
-            }
-            return null;
-        }
-
-        private void processJwtAuthentication(HttpServletRequest request, String jwtToken) {
-            String username = jwtService.getUsernameFromToken(jwtToken);
-            UserDetails userDetails = userService.loadUserByUsername(username);
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = this.userService.loadUserByUsername(username);
 
             if (jwtService.validateToken(jwtToken, userDetails)) {
-                setAuthenticationContext(request, userDetails);
-            } else {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT Token is not valid");
+                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                System.out.println("Authentication set in SecurityContext");
             }
         }
 
-        private boolean isValidJwtStructure(String jwtToken) {
-            return jwtToken.matches("[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+");
-        }
-
-        private void setAuthenticationContext(HttpServletRequest request, UserDetails userDetails) {
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
+        filterChain.doFilter(request, response);
     }
 
+
+    private boolean isValidJwtStructure(String jwtToken) {
+        return jwtToken.matches("[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+");
+    }
+}
