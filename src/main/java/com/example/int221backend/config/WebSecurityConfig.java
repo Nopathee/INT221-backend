@@ -33,8 +33,8 @@ public class WebSecurityConfig {
         httpSecurity
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/decode-token").permitAll() // เปิดให้เข้าถึงโดยไม่ต้องมี token
-                        .requestMatchers("/v2/**").authenticated() // ต้องมี token สำหรับ /v2/**
+                        .requestMatchers("/login", "/decode-token").permitAll()
+                        .requestMatchers("/v2/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
