@@ -33,11 +33,12 @@ public class WebSecurityConfig {
         httpSecurity
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/decode-token","/v2/**").permitAll() // Make sure /v2/** endpoints are authenticated
-                        .anyRequest().authenticated() // Allow other requests if needed
+                        .requestMatchers("/login", "/decode-token").permitAll() // เปิดให้เข้าถึงโดยไม่ต้องมี token
+                        .requestMatchers("/v2/**").authenticated() // ต้องมี token สำหรับ /v2/**
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .httpBasic(Customizer.withDefaults()); // Use withDefaults() for HTTP Basic
+                .httpBasic(Customizer.withDefaults());
         httpSecurity.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }

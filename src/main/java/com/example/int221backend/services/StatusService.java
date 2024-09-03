@@ -104,9 +104,9 @@ public class StatusService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Status name must be unique");
         }
 
-        existingStatus.setName(status.getName().trim());
-        existingStatus.setDescription(status.getDescription() != null ? status.getDescription() : null);
-        existingStatus.setColor(status.getColor() != null ? status.getColor().trim() : null);
+        //existingStatus.setName(status.getName().trim());
+        //existingStatus.setDescription(status.getDescription() != null ? status.getDescription() : null);
+        //existingStatus.setColor(status.getColor() != null ? status.getColor().trim() : null);
         return repository.save(existingStatus);
     }
 

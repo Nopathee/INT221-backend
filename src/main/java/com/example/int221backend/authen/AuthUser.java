@@ -12,16 +12,19 @@ import java.util.Collection;
 @Getter
 @Setter
 public class AuthUser extends User implements Serializable {
+
+    // Constructor ที่ไม่มี authorities
     public AuthUser() {
         super("anonymous", "", new ArrayList<GrantedAuthority>());
     }
 
-    public AuthUser(String userName, String password) {
-        super(userName, password, new ArrayList<GrantedAuthority>());
+    // Constructor ที่มี authorities
+    public AuthUser(String username, String password, Collection<? extends GrantedAuthority> authorities) {
+        super(username, password, authorities);
     }
 
-    public AuthUser(String userName, String password, Collection<? extends
-                GrantedAuthority> authorities) {
-        super(userName, password, authorities);
+    // Constructor ที่ไม่มี authorities และใช้ default authorities
+    public AuthUser(String username, String password) {
+        this(username, password, new ArrayList<GrantedAuthority>());
     }
 }
