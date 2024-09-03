@@ -66,7 +66,7 @@ public class JwtService implements Serializable {
         claims.put("oid", userInfo.getOid());
         claims.put("email", userInfo.getEmail());
         claims.put("role", userInfo.getRole());
-        return doGenerateToken(claims, userInfo.getName());
+        return doGenerateToken(claims, userInfo.getUsername());
     }
 
     // Create the token with claims and subject

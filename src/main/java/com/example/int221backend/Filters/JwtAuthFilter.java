@@ -70,7 +70,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
     }
 
     private boolean isValidJwtStructure(String jwtToken) {
