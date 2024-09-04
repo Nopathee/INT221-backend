@@ -1,5 +1,6 @@
 package com.example.int221backend.entities;
 
+import com.example.int221backend.user_entities.Board;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,19 +23,20 @@ public class TaskV2 {
     @Column(name = "task_description", length = 500)
     private String description;
 
-    @Column(name = "task_assignees", length = 30)
+    @Column(name = "task_assignees", columnDefinition = "TINYTEXT")
     private String assignees;
 
     @ManyToOne
-    @JoinColumn(name = "task_status_id", referencedColumnName = "id")
+    @JoinColumn(name = "task_status_id")
     private Status status;
 
     @Column(name = "created_on", updatable = false, insertable = false)
     private ZonedDateTime createdOn;
 
-    @Column(name = "updated_on", insertable = false , updatable = false)
+    @Column(name = "updated_on", insertable = false, updatable = false)
     private ZonedDateTime updatedOn;
 
-    // Constructors, getters, and setters
-
+    @ManyToOne
+    @JoinColumn(name = "board_id", nullable = false)
+    private Board board;
 }

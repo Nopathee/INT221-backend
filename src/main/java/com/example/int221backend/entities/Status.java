@@ -1,9 +1,9 @@
 package com.example.int221backend.entities;
 
+import com.example.int221backend.user_entities.Board;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.antlr.v4.runtime.misc.NotNull;
 
 import java.time.ZonedDateTime;
 
@@ -12,22 +12,27 @@ import java.time.ZonedDateTime;
 @Entity
 @Table(name = "status")
 public class Status {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "statusName" , nullable = false , length = 50)
+    @Column(name = "statusName", nullable = false, length = 50)
     private String name;
 
-    @Column(name = "statusDescription" ,length = 200)
+    @Column(name = "statusDescription", length = 200)
     private String description;
 
-    //@Column(name = "color",length = 30)
-    //private String color;
+    @Column(name = "color", length = 30)
+    private String color;
 
     @Column(name = "created_on", updatable = false, insertable = false)
     private ZonedDateTime createdOn;
 
-    @Column(name = "updated_on", insertable = false ,updatable = false)
+    @Column(name = "updated_on", insertable = false, updatable = false)
     private ZonedDateTime updatedOn;
+
+    @ManyToOne
+    @JoinColumn(name = "board_id", nullable = false)
+    private Board board;
 }
