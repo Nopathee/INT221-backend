@@ -42,7 +42,9 @@ public class StatusController {
                 addStatusDTO.setDescription(addStatusDTO.getDescription().trim());
             }
 
-            AddStatusDTO newStatus = service.addStatus(addStatusDTO);
+            String boardId = addStatusDTO.getBId();
+
+            AddStatusDTO newStatus = service.addStatus(addStatusDTO, boardId);
 
             return new ResponseEntity<>(newStatus, HttpStatus.CREATED);
         }catch (ResponseStatusException e){

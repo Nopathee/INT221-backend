@@ -1,4 +1,4 @@
-package com.example.int221backend.user_entities;
+package com.example.int221backend.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

@@ -1,13 +1,10 @@
 package com.example.int221backend.user_services;
 
-import com.example.int221backend.exception.NotCreatedException;
-import com.example.int221backend.user_entities.Board;
+import com.example.int221backend.entities.Board;
 import com.example.int221backend.user_entities.BoardRepository;
-import com.example.int221backend.user_entities.User;
 import com.example.int221backend.user_entities.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BoardService {

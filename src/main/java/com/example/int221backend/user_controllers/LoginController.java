@@ -2,11 +2,9 @@ package com.example.int221backend.user_controllers;
 
 import com.example.int221backend.user_dtos.AuthRequestDTO;
 import com.example.int221backend.user_dtos.AuthResponseDTO;
-import com.example.int221backend.user_entities.User;
+import com.example.int221backend.entities.User;
 import com.example.int221backend.user_services.JwtService;
 import com.example.int221backend.user_services.UserService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -5,6 +5,8 @@ import com.example.int221backend.entities.Status;
 import com.example.int221backend.entities.TaskV2;
 import com.example.int221backend.entities.StatusRepository;
 import com.example.int221backend.entities.TaskV2Repository;
+import com.example.int221backend.entities.Board;
+import com.example.int221backend.user_entities.BoardRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,12 +17,15 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @Service
-public class StatusService {
+public class   StatusService {
     @Autowired
     private StatusRepository repository;
 
     @Autowired
     private TaskV2Repository taskRepository;
+
+    @Autowired
+    private BoardRepository boardRepository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -35,7 +40,7 @@ public class StatusService {
     }
 
     @Transactional
-    public AddStatusDTO addStatus(AddStatusDTO addStatusDTO) {
+    public AddStatusDTO addStatus(AddStatusDTO addStatusDTO, String boardId) {
         if (addStatusDTO.getName() == null){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Name must not be null");
         }
@@ -60,8 +65,12 @@ public class StatusService {
         if (repository.existsByName(addStatusDTO.getName())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Status name must be unique");
         }
+        Board board = boardRepository.findById(addStatusDTO.getBId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"Board ID " + addStatusDTO.getBId() + "Does not exist!!!"));
 
         Status status = modelMapper.map(addStatusDTO, Status.class);
+        status.setBoard(board);
+
         return modelMapper.map(repository.save(status), AddStatusDTO.class);
     }
 

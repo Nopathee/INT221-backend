@@ -12,4 +12,5 @@ public class AddStatusDTO {
     private String name;
     private String description;
     private String color;
+    private String bId;
 }

@@ -1,6 +1,5 @@
 package com.example.int221backend.entities;
 
-import com.example.int221backend.user_entities.Board;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

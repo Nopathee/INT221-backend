@@ -1,6 +1,6 @@
 package com.example.int221backend.user_services;
 
-import com.example.int221backend.user_entities.User;
+import com.example.int221backend.entities.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

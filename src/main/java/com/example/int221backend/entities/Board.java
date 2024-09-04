@@ -1,4 +1,4 @@
-package com.example.int221backend.user_entities;
+package com.example.int221backend.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;
