@@ -1,4 +1,4 @@
-package com.example.int221backend.user_dtos;
+package com.example.int221backend.dtos;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

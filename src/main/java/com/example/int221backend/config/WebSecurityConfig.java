@@ -1,7 +1,7 @@
 package com.example.int221backend.config;
 
 import com.example.int221backend.Filters.JwtAuthFilter;
-import com.example.int221backend.user_services.UserService;
+import com.example.int221backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

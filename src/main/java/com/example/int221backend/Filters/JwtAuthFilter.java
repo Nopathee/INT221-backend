@@ -1,7 +1,7 @@
 package com.example.int221backend.Filters;
 
-import com.example.int221backend.user_services.JwtService;
-import com.example.int221backend.user_services.UserService;
+import com.example.int221backend.services.JwtService;
+import com.example.int221backend.services.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

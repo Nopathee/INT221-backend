@@ -1,4 +1,4 @@
-package com.example.int221backend.entities;
+package com.example.int221backend.repositories;
 
 import com.example.int221backend.entities.TaskV2;
 import org.springframework.data.jpa.repository.JpaRepository;

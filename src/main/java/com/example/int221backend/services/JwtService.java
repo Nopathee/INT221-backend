@@ -1,4 +1,4 @@
-package com.example.int221backend.user_services;
+package com.example.int221backend.services;
 
 import com.example.int221backend.entities.User;
 import io.jsonwebtoken.Claims;

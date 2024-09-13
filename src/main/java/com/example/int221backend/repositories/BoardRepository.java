@@ -1,4 +1,4 @@
-package com.example.int221backend.user_entities;
+package com.example.int221backend.repositories;
 
 import com.example.int221backend.entities.Board;
 import org.springframework.data.jpa.repository.JpaRepository;

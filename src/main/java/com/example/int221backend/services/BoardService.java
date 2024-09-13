@@ -1,8 +1,8 @@
-package com.example.int221backend.user_services;
+package com.example.int221backend.services;
 
 import com.example.int221backend.entities.Board;
-import com.example.int221backend.user_entities.BoardRepository;
-import com.example.int221backend.user_entities.UserRepository;
+import com.example.int221backend.repositories.BoardRepository;
+import com.example.int221backend.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

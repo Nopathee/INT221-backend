@@ -1,4 +1,4 @@
-package com.example.int221backend.user_dtos;
+package com.example.int221backend.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
