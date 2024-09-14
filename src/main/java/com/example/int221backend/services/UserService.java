@@ -1,7 +1,9 @@
 package com.example.int221backend.services;
 
-import com.example.int221backend.entities.UserRepository;
-import com.example.int221backend.entities.User;
+import com.example.int221backend.entities.local.UserLocal;
+import com.example.int221backend.repositories.local.UserLocalRepository;
+import com.example.int221backend.repositories.shared.UserRepository;
+import com.example.int221backend.entities.shared.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +19,8 @@ import java.util.List;
 public class UserService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UserLocalRepository userLocalRepository;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -42,6 +46,16 @@ public class UserService implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("Username or Password is incorrect");
         }
+
+        UserLocal userLocal = new UserLocal();
+        userLocal.setOid(user.getOid());
+        userLocal.setUsername(user.getUsername());
+        userLocal.setName(user.getName());
+        userLocal.setEmail(user.getEmail());
+        userLocal.setRole(user.getRole());
+
+        userLocalRepository.save(userLocal);
+
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), new ArrayList<>());
     }
 

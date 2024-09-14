@@ -1,5 +1,6 @@
-package com.example.int221backend.entities;
+package com.example.int221backend.entities.local;
 
+import com.example.int221backend.entities.shared.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,8 +16,8 @@ public class Board {
     private String boardId;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User owner;
+    @JoinColumn(name = "owner_id", nullable = false)
+    private UserLocal owner;
 
     @Column(name = "board_name", nullable = false, length = 100)
     private String name;

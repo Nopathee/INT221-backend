@@ -2,7 +2,7 @@ package com.example.int221backend.controllers;
 
 import com.example.int221backend.dtos.*;
 import com.example.int221backend.dtos.AddTaskV2DTO;
-import com.example.int221backend.entities.TaskV2;
+import com.example.int221backend.entities.local.TaskV2;
 import com.example.int221backend.services.StatusService;
 import com.example.int221backend.services.TaskV2Service;
 import org.modelmapper.ModelMapper;

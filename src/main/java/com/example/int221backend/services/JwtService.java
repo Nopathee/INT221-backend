@@ -1,6 +1,6 @@
 package com.example.int221backend.services;
 
-import com.example.int221backend.entities.User;
+import com.example.int221backend.entities.shared.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -30,6 +30,10 @@ public class JwtService implements Serializable {
         return getClaimFromToken(token, Claims::getSubject);
     }
 
+    public String getOidFromToken(String token){
+        return getClaimFromToken(token, claims -> claims.get("oid", String.class));
+    }
+
     // Extract expiration date from token
     public Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
@@ -48,7 +52,6 @@ public class JwtService implements Serializable {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        System.out.println("Claims from token: " + claims);
         return claims;
     }
 

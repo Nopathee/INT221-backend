@@ -37,18 +37,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             jwtToken = authorizationHeader.substring(7);
 
             if (!isValidJwtStructure(jwtToken)) {
-                System.out.println("Invalid JWT token structure");
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid JWT token structure");
             }
 
             try {
                 username = jwtService.getUsernameFromToken(jwtToken);
-                System.out.println("Username from token: " + username);
             } catch (ExpiredJwtException e) {
-                System.out.println("JWT token is expired");
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT token is expired", e);
             } catch (Exception e) {
-                System.out.println("Invalid JWT token");
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid JWT token", e);
             }
         }
@@ -60,12 +56,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    System.out.println("Authentication set in SecurityContext");
                 } else {
-                    System.out.println("JWT token is not valid");
                 }
             } catch (UsernameNotFoundException e) {
-                System.out.println("User not found: " + e.getMessage());
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found", e);
             }
         }

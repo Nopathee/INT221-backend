@@ -20,7 +20,7 @@ import java.util.Objects;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        basePackages = "com.example.int221backend.entities",
+        basePackages = "com.example.int221backend.repositories.local",
         entityManagerFactoryRef = "projectManagementEntityManager",
         transactionManagerRef = "projectManagementTransactionManager"
 )
@@ -47,7 +47,7 @@ public class ProjectManagementDatasourceConfig {
             EntityManagerFactoryBuilder builder) {
         return builder
                 .dataSource(projectManagementDataSource())
-                .packages("com.example.int221backend.entities")
+                .packages("com.example.int221backend.entities.local")
 //                .persistenceUnit("projectManagementPU")
                 .build();
     }

@@ -2,10 +2,10 @@ package com.example.int221backend.services;
 
 import com.example.int221backend.dtos.AddTaskDTO;
 import com.example.int221backend.dtos.AddTaskV2DTO;
-import com.example.int221backend.entities.Status;
-import com.example.int221backend.entities.TaskV2;
-import com.example.int221backend.entities.StatusRepository;
-import com.example.int221backend.entities.TaskV2Repository;
+import com.example.int221backend.entities.local.Status;
+import com.example.int221backend.entities.local.TaskV2;
+import com.example.int221backend.repositories.local.StatusRepository;
+import com.example.int221backend.repositories.local.TaskV2Repository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

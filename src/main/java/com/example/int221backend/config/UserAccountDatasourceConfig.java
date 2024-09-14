@@ -21,7 +21,7 @@ import java.util.Objects;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        basePackages = "com.example.int221backend.user_entities",
+        basePackages = "com.example.int221backend.repositories.shared",
         entityManagerFactoryRef = "userAccountEntityManager",
         transactionManagerRef = "userAccountTransactionManager"
 )
@@ -55,7 +55,7 @@ public class UserAccountDatasourceConfig {
             EntityManagerFactoryBuilder builder) {
         return builder
                 .dataSource(userAccountDataSource())
-                .packages("com.example.int221backend.user_entities")
+                .packages("com.example.int221backend.entities.shared")
 //                .persistenceUnit("userAccountPU")
                 .build();
     }

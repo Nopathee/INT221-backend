@@ -1,7 +1,6 @@
 package com.example.int221backend.dtos;
 
-import com.example.int221backend.entities.Status;
-import com.example.int221backend.entities.TaskStatus;
+import com.example.int221backend.entities.local.Status;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;

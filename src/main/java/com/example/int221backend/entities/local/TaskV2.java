@@ -1,4 +1,4 @@
-package com.example.int221backend.entities;
+package com.example.int221backend.entities.local;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -9,21 +9,25 @@ import java.time.ZonedDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "status")
-public class Status {
+@Table(name = "tasksV2")
+public class TaskV2 {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private String id;
 
-    @Column(name = "statusName", nullable = false, length = 50)
-    private String name;
+    @Column(name = "task_title", nullable = false, length = 100)
+    private String title;
 
-    @Column(name = "statusDescription", length = 200)
+    @Column(name = "task_description", length = 500)
     private String description;
 
-    @Column(name = "color", length = 30)
-    private String color;
+    @Column(name = "task_assignees", columnDefinition = "TINYTEXT")
+    private String assignees;
+
+    @ManyToOne
+    @JoinColumn(name = "task_status_id")
+    private Status status;
 
     @Column(name = "created_on", updatable = false, insertable = false)
     private ZonedDateTime createdOn;
