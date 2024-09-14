@@ -20,4 +20,7 @@ public class BoardService {
         return boardRepository.findByOwner_Oid(oid);
     }
 
+    public Board addBoard(Board newBoard) {
+        return newBoard;
+    }
 }

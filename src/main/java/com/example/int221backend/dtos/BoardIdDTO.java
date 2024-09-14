@@ -9,4 +9,9 @@ import lombok.Setter;
 @Data
 public class BoardIdDTO {
     private String boardId;
+
+    private String nameBoard;
+    public String getName() {
+        return nameBoard;
+    }
 }
