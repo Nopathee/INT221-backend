@@ -1,10 +1,12 @@
 package com.example.int221backend.services;
 
 import com.example.int221backend.entities.Board;
-import com.example.int221backend.repositories.BoardRepository;
-import com.example.int221backend.repositories.UserRepository;
+import com.example.int221backend.entities.BoardRepository;
+import com.example.int221backend.entities.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class BoardService {
@@ -14,9 +16,19 @@ public class BoardService {
     @Autowired
     private UserRepository userRepository;
 
-    public Board getBoardForUser(String userId) {
-        return boardRepository.findByOwner_Oid(userId);
+    public List<Board> getAllBoard(){
+        return boardRepository.findAll();
     }
+
+    public String getBoardForUser(String userId) {
+        Board board = boardRepository.findByOwner_Oid(userId);
+        if (board != null){
+            return board.getBoardId();
+        }
+        return null;
+    }
+
+
 
 //    @Transactional
 //    public Board createBoardForUser(Integer userId, String boardName) throws NotCreatedException {

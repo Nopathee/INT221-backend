@@ -2,7 +2,7 @@ package com.example.int221backend.controllers;
 
 import com.example.int221backend.dtos.AuthResponseDTO;
 import com.example.int221backend.dtos.LoginUserDTO;
-import com.example.int221backend.repositories.UserRepository;
+import com.example.int221backend.entities.UserRepository;
 import com.example.int221backend.services.JwtService;
 import com.example.int221backend.services.UserService;
 import com.example.int221backend.entities.User;

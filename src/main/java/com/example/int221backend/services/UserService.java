@@ -1,6 +1,6 @@
 package com.example.int221backend.services;
 
-import com.example.int221backend.repositories.UserRepository;
+import com.example.int221backend.entities.UserRepository;
 import com.example.int221backend.entities.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
