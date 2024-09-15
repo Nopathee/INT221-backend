@@ -31,10 +31,13 @@ public class BoardService {
         return boardRepository.save(newBoard);
     }
 
-    public Board getBoardByBoardId(String boardId){
+    public Board getBoardByBoardId(String boardId) {
+        return boardRepository.findById(boardId)
+                .orElseThrow(() -> new IllegalArgumentException("Board ID " + boardId + " does not exist"));
+    }
 
-        return boardRepository.getBoardByBoardId(boardId);
-
+    public boolean existsById(String boardId) {
+        return boardRepository.existsById(boardId);
     }
 
 }

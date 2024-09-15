@@ -1,10 +1,12 @@
 package com.example.int221backend.controllers;
 
-import com.example.int221backend.dtos.*;
-import com.example.int221backend.dtos.AddTaskV2DTO;
-import com.example.int221backend.entities.local.TaskV2;
+import com.example.int221backend.dtos.AddTaskV3DTO;
+import com.example.int221backend.dtos.AddTaskDTO;
+import com.example.int221backend.dtos.SimpleTaskV3DTO;
+import com.example.int221backend.entities.local.TaskV3;
+import com.example.int221backend.services.BoardService;
 import com.example.int221backend.services.StatusService;
-import com.example.int221backend.services.TaskV2Service;
+import com.example.int221backend.services.TaskV3Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,10 +20,10 @@ import java.util.stream.Collectors;
 
 @CrossOrigin(origins = {"http://localhost:5173", "http://ip23ssi3.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
 @RestController
-@RequestMapping("v2/tasks")
-public class TaskV2Controller {
+@RequestMapping("v3/tasks")
+public class TaskV3Controller {
     @Autowired
-    private TaskV2Service taskV2Service;
+    private TaskV3Service taskV3Service;
 
     @Autowired
     private StatusService statusService;
@@ -29,26 +31,31 @@ public class TaskV2Controller {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private BoardService boardService;
 
     @GetMapping("")
-    public ResponseEntity<Object> getAllTask(@RequestParam(required = false) Set<String> filterStatuses) {
-//        List<TaskV2> tasks = service.getAllTask();
-//        List<SimpleTaskV2DTO> simpleTaskV2DTOs = tasks.stream()
-//                .map(task -> modelMapper.map(task, SimpleTaskV2DTO.class))
-//                .collect(Collectors.toList());
-//        return ResponseEntity.ok(simpleTaskV2DTOs);
-        List<TaskV2> tasks = taskV2Service.getAllTask(filterStatuses);
-        List<SimpleTaskV2DTO> simpleTaskV2DTOs = tasks.stream()
-                .map(task -> modelMapper.map(task, SimpleTaskV2DTO.class))
+    public ResponseEntity<Object> getAllTask(
+            @RequestParam(required = false) Set<String> filterStatuses,
+            @RequestParam(required = false) String boardId) {
+
+        if (boardId != null && !boardService.existsById(boardId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board not found");
+        }
+
+        List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses);
+        List<SimpleTaskV3DTO> simpleTaskV3DTOs = tasks.stream()
+                .map(task -> modelMapper.map(task, SimpleTaskV3DTO.class))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(simpleTaskV2DTOs);
+
+        return ResponseEntity.ok(simpleTaskV3DTOs);
     }
 
     @GetMapping("/{id}")
-    public TaskV2 getTaskById(@PathVariable Integer id) {
-        return taskV2Service.getTaskById(id);
+    public ResponseEntity<TaskV3> getTaskById(@PathVariable Integer id) {
+        TaskV3 task = taskV3Service.getTaskById(id);
+        return ResponseEntity.ok(task);
     }
-
 
     @PostMapping("")
     public ResponseEntity<?> addTask(@RequestBody AddTaskDTO addTaskDTO) {
@@ -75,22 +82,19 @@ public class TaskV2Controller {
 
             Integer status = addTaskDTO.getStatus();
 
-            AddTaskV2DTO newTask = taskV2Service.addTask(addTaskDTO, status);
+            AddTaskV3DTO newTask = taskV3Service.addTask(addTaskDTO, status);
 
             return new ResponseEntity<>(newTask, HttpStatus.CREATED);
         }catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
-
         }
-
     }
-
 
     @DeleteMapping("/{id}")
-    public void deleteTask(@PathVariable Integer id) {
-        taskV2Service.deleteTask(id);
+    public ResponseEntity<Void> deleteTask(@PathVariable Integer id) {
+        taskV3Service.deleteTask(id);
+        return ResponseEntity.noContent().build();
     }
-
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateTask(@PathVariable Integer id, @RequestBody AddTaskDTO task) {
@@ -105,11 +109,9 @@ public class TaskV2Controller {
                 } else {
                     task.setDescription(task.getDescription().trim());
                 }
-
             }
 
             if (task.getAssignees() != null) {
-
                 if (task.getAssignees().isEmpty()) {
                     task.setAssignees(null);
                 } else {
@@ -119,15 +121,13 @@ public class TaskV2Controller {
 
             Integer status = task.getStatus();
 
-            TaskV2 editedTask = modelMapper.map(task, TaskV2.class);
+            TaskV3 editedTask = modelMapper.map(task, TaskV3.class);
 
-            AddTaskV2DTO updatedTask = taskV2Service.updateTask(editedTask, id, status);
+            AddTaskV3DTO updatedTask = taskV3Service.updateTask(editedTask, id, status);
 
             return ResponseEntity.ok(updatedTask);
         }catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         }
-
     }
-
 }
