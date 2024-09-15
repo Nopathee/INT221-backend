@@ -41,7 +41,7 @@ public class StatusController {
                 addStatusDTO.setDescription(addStatusDTO.getDescription().trim());
             }
 
-            String boardId = addStatusDTO.getBId();
+            String boardId = addStatusDTO.getBoardId();
 
             AddStatusDTO newStatus = service.addStatus(addStatusDTO, boardId);
 
@@ -53,20 +53,20 @@ public class StatusController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> editStatus(@PathVariable Integer id, @RequestBody Status addStatusDTO) {
-            try {
-                if (addStatusDTO.getName() != null) {
-                    addStatusDTO.setName(addStatusDTO.getName().trim());
-                }
-
-                if (addStatusDTO.getDescription() != null) {
-                    addStatusDTO.setDescription(addStatusDTO.getDescription().trim());
-                }
-
-                Status editedStatus = service.editStatus(addStatusDTO, id);
-                return ResponseEntity.ok(editedStatus);
-            }catch (ResponseStatusException e){
-                return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        try {
+            if (addStatusDTO.getName() != null) {
+                addStatusDTO.setName(addStatusDTO.getName().trim());
             }
+
+            if (addStatusDTO.getDescription() != null) {
+                addStatusDTO.setDescription(addStatusDTO.getDescription().trim());
+            }
+
+            Status editedStatus = service.editStatus(addStatusDTO, id);
+            return ResponseEntity.ok(editedStatus);
+        }catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        }
     }
 
     @DeleteMapping("/{id}")

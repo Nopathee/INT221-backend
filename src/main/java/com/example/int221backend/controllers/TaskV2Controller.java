@@ -3,7 +3,7 @@ package com.example.int221backend.controllers;
 import com.example.int221backend.dtos.*;
 import com.example.int221backend.dtos.AddTaskV2DTO;
 import com.example.int221backend.entities.local.TaskV2;
-import com.example.int221backend.services.StatusService;
+import com.example.int221backend.services.StatusV3Service;
 import com.example.int221backend.services.TaskV2Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class TaskV2Controller {
     private TaskV2Service taskV2Service;
 
     @Autowired
-    private StatusService statusService;
+    private StatusV3Service statusService;
 
     @Autowired
     private ModelMapper modelMapper;

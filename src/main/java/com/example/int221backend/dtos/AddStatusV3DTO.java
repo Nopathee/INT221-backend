@@ -7,10 +7,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @Data
-public class AddStatusDTO {
+public class AddStatusV3DTO {
     private Integer id;
     private String name;
     private String description;
     private String color;
-    private String boardId;
+    private String bId;
 }

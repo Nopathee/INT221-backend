@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @Service
-public class   StatusService {
+public class StatusService {
     @Autowired
     private StatusRepository repository;
 
@@ -65,8 +65,8 @@ public class   StatusService {
         if (repository.existsByName(addStatusDTO.getName())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Status name must be unique");
         }
-        Board board = boardRepository.findById(addStatusDTO.getBId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"Board ID " + addStatusDTO.getBId() + "Does not exist!!!"));
+        Board board = boardRepository.findById(addStatusDTO.getBoardId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"Board ID " + addStatusDTO.getBoardId() + "Does not exist!!!"));
 
         Status status = modelMapper.map(addStatusDTO, Status.class);
         status.setBoard(board);
