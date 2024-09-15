@@ -1,8 +1,11 @@
 package com.example.int221backend.services;
 
+import com.example.int221backend.dtos.AddBoardDTO;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.repositories.local.BoardRepository;
 import com.example.int221backend.repositories.shared.UserRepository;
+import org.bouncycastle.math.raw.Mod;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,9 @@ public class BoardService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
 
     public List<Board> getAllBoard(String oid){
         return boardRepository.findByOwner_Oid(oid);

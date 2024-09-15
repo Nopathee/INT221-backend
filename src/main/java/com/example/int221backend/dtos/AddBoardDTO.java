@@ -7,6 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @Data
-public class BoardIdDTO {
-    private String boardId;
+public class AddBoardDTO {
+    private String name;
 }

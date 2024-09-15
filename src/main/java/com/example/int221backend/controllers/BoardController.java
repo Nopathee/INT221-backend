@@ -1,5 +1,6 @@
 package com.example.int221backend.controllers;
 
+import com.example.int221backend.dtos.AddBoardDTO;
 import com.example.int221backend.dtos.BoardIdDTO;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.UserLocal;
@@ -65,27 +66,26 @@ public class BoardController {
     @PostMapping("")
     public ResponseEntity<?> createBoard(
             @RequestHeader("Authorization") String token,
-            @RequestBody(required = false) BoardIdDTO boardIdDTO) {
-
+            @RequestBody(required = false) AddBoardDTO addBoardDTO) {
 
         if (token == null) {
             return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("the access token has expired or is invalid");
         }
 
-        if (boardIdDTO == null || boardIdDTO.getName() == null || boardIdDTO.getName().isEmpty()) {
+        if (addBoardDTO == null || addBoardDTO.getName() == null || addBoardDTO.getName().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("boardName is null, empty, or length > MAX-LENGTH");
         }
 
-        if (boardIdDTO.getName().length() > MAX_LENGTH) {
+        if (addBoardDTO.getName().length() > MAX_LENGTH) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("boardName is null, empty, or length > MAX-LENGTH");
         }
 
 
         String afterSubToken = token.substring(7);
         String oid = jwtService.getOidFromToken(afterSubToken);
-
+        System.out.println(addBoardDTO);
         Board newBoard = new Board();
-        newBoard.setName(boardIdDTO.getName());
+        newBoard.setName(addBoardDTO.getName());
         UserLocal owner = userService.findByOid(oid);
         newBoard.setOwner(owner);
         Board createdBoard = boardService.addBoard(newBoard);
