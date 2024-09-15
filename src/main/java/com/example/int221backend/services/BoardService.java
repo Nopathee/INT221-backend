@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BoardService {
@@ -21,6 +22,13 @@ public class BoardService {
     }
 
     public Board addBoard(Board newBoard) {
-        return newBoard;
+        return boardRepository.save(newBoard);
     }
+
+    public Board getBoardByBoardId(String boardId){
+
+        return boardRepository.getBoardByBoardId(boardId);
+
+    }
+
 }

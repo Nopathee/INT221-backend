@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +34,22 @@ public class BoardController {
     @Autowired
     private UserService userService;
 
+
+    private Board checkBoard(String boardId) {
+        Board board = boardService.getBoardByBoardId(boardId);
+        if (board == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Board not found");
+        }
+        return board;
+
+
+    }
+
+    @GetMapping("/board/{boardId}/tasks")
+    public ResponseEntity<Board> getBoardById(@PathVariable String boardId) {
+        Board board = checkBoard(boardId);
+        return ResponseEntity.ok(board);
+    }
     @GetMapping("")
     public ResponseEntity<List<BoardIdDTO>> getAllBoard(@RequestHeader ("Authorization") String token) {
         String afterSubToken = token.substring(7);
