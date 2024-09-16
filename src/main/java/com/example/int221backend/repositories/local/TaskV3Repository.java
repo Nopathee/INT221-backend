@@ -8,5 +8,7 @@ import java.util.List;
 
 public interface TaskV3Repository extends JpaRepository<TaskV3, Integer> {
     List<TaskV3> findByStatusId(Integer statusId);
+
+    List<TaskV3> findByBoard_BoardId(String boardId);
 }
 

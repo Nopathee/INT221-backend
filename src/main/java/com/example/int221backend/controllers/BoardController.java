@@ -46,11 +46,12 @@ public class BoardController {
 
     }
 
-    @GetMapping("/board/{boardId}/tasks")
+    @GetMapping("/{boardId}/tasks")
     public ResponseEntity<Board> getBoardById(@PathVariable String boardId) {
         Board board = checkBoard(boardId);
         return ResponseEntity.ok(board);
     }
+
     @GetMapping("")
     public ResponseEntity<List<BoardIdDTO>> getAllBoard(@RequestHeader ("Authorization") String token) {
         String afterSubToken = token.substring(7);

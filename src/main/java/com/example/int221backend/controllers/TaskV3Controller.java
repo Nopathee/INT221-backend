@@ -1,7 +1,7 @@
 package com.example.int221backend.controllers;
 
 import com.example.int221backend.dtos.AddTaskDTO;
-import com.example.int221backend.dtos.AddTaskV3DTO;
+import com.example.int221backend.dtos.AddTaskV2DTO;
 import com.example.int221backend.dtos.SimpleTaskV3DTO;
 import com.example.int221backend.entities.local.TaskV3;
 import com.example.int221backend.services.BoardService;
@@ -43,7 +43,7 @@ public class TaskV3Controller {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board not found");
         }
 
-        List<TaskV3> tasks = taskV3Service.getAllTask(boardId, filterStatuses);
+        List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses,boardId);
         List<SimpleTaskV3DTO> simpleTaskV3DTOs = tasks.stream()
                 .map(task -> modelMapper.map(task, SimpleTaskV3DTO.class))
                 .collect(Collectors.toList());
@@ -57,7 +57,7 @@ public class TaskV3Controller {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board not found");
         }
 
-        TaskV3 task = taskV3Service.getTaskById(id);
+        TaskV3 task = taskV3Service.getTaskById(id, boardId );
         if (task == null || !task.getBoard().getBoardId().equals(boardId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Task not found in the specified board");
         }
@@ -66,21 +66,18 @@ public class TaskV3Controller {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> addTask(@PathVariable String boardId, @RequestBody AddTaskDTO addTaskDTO) {
+    public ResponseEntity<?> addTask(@PathVariable String boardId, @RequestBody AddTaskDTO addTaskDTO){
         try {
-            if (!boardService.existsById(boardId)) {
+            if (!boardService.existsById(boardId)){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board not found");
             }
-
-            if (addTaskDTO.getTitle() != null) {
+            if (addTaskDTO.getTitle() != null){
                 addTaskDTO.setTitle(addTaskDTO.getTitle().trim());
             }
-
-            if (addTaskDTO.getDescription() != null) {
+            if (addTaskDTO.getDescription() != null){
                 addTaskDTO.setDescription(addTaskDTO.getDescription().trim());
             }
-
-            if (addTaskDTO.getAssignees() != null) {
+            if (addTaskDTO.getAssignees() != null){
                 addTaskDTO.setAssignees(addTaskDTO.getAssignees().trim());
             }
 
@@ -92,69 +89,68 @@ public class TaskV3Controller {
                 addTaskDTO.setAssignees(null);
             }
 
-            Integer status = addTaskDTO.getStatus();
+            Integer statusId = addTaskDTO.getStatus();
 
-            AddTaskV3DTO newTask = taskV3Service.addTask(addTaskDTO, status);
+            AddTaskV2DTO newTask = taskV3Service.addTask(addTaskDTO, statusId, boardId);
 
             return new ResponseEntity<>(newTask, HttpStatus.CREATED);
-        } catch (ResponseStatusException e) {
+
+        } catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable String boardId, @PathVariable Integer id) {
-        if (!boardService.existsById(boardId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board not found");
-        }
-
-        if (!taskV3Service.isTaskInBoard(id, boardId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Task not found in the specified board");
-        }
-
-        taskV3Service.deleteTask(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateTask(@PathVariable String boardId, @PathVariable Integer id, @RequestBody AddTaskDTO task) {
+    public ResponseEntity<?> deleteTask(@PathVariable String boardId, @PathVariable Integer id){
         try {
-            if (!boardService.existsById(boardId)) {
+            if (!boardService.existsById(boardId)){
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board not found");
             }
 
-            if (task.getTitle() != null) {
-                task.setTitle(task.getTitle().trim());
+            taskV3Service.deleteTask(id,boardId);
+            return ResponseEntity.noContent().build();
+        } catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateTask(@PathVariable String boardId , @PathVariable Integer id , @RequestBody AddTaskDTO addTaskDTO) {
+        try {
+            if (!boardService.existsById(boardId)){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board not found");
             }
 
-            if (task.getDescription() != null) {
-                if (task.getDescription().isEmpty()) {
-                    task.setDescription(null);
+            if (addTaskDTO.getTitle() != null) {
+                addTaskDTO.setTitle(addTaskDTO.getTitle().trim());
+            }
+
+            if (addTaskDTO.getDescription() != null) {
+                if (addTaskDTO.getDescription().isEmpty()) {
+                    addTaskDTO.setDescription(null);
                 } else {
-                    task.setDescription(task.getDescription().trim());
+                    addTaskDTO.setDescription(addTaskDTO.getDescription().trim());
+                }
+
+            }
+
+            if (addTaskDTO.getAssignees() != null) {
+
+                if (addTaskDTO.getAssignees().isEmpty()) {
+                    addTaskDTO.setAssignees(null);
+                } else {
+                    addTaskDTO.setAssignees(addTaskDTO.getAssignees().trim());
                 }
             }
 
-            if (task.getAssignees() != null) {
-                if (task.getAssignees().isEmpty()) {
-                    task.setAssignees(null);
-                } else {
-                    task.setAssignees(task.getAssignees().trim());
-                }
-            }
+            Integer status = addTaskDTO.getStatus();
 
-            Integer status = task.getStatus();
+            TaskV3 editedTask = modelMapper.map(addTaskDTO, TaskV3.class);
 
-            TaskV3 editedTask = modelMapper.map(task, TaskV3.class);
-
-            if (!taskV3Service.isTaskInBoard(id, boardId)) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Task not found in the specified board");
-            }
-
-            AddTaskV3DTO updatedTask = taskV3Service.updateTask(editedTask, id, status);
+            AddTaskV2DTO updatedTask = taskV3Service.updateTask(editedTask,id,status,boardId);
 
             return ResponseEntity.ok(updatedTask);
-        } catch (ResponseStatusException e) {
+        } catch (ResponseStatusException e){
             return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         }
     }
