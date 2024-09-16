@@ -79,7 +79,7 @@ public class StatusV3Controller {
 
         try {
             statusService.deleteStatus(statusId);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok().build();
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         }
