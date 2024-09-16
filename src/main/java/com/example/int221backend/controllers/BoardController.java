@@ -1,6 +1,7 @@
 package com.example.int221backend.controllers;
 
 import com.example.int221backend.dtos.AddBoardDTO;
+import com.example.int221backend.dtos.AddStatusDTO;
 import com.example.int221backend.dtos.BoardIdDTO;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.UserLocal;
@@ -84,13 +85,12 @@ public class BoardController {
 
         String afterSubToken = token.substring(7);
         String oid = jwtService.getOidFromToken(afterSubToken);
-        System.out.println(addBoardDTO);
         Board newBoard = new Board();
         newBoard.setName(addBoardDTO.getName());
         UserLocal owner = userService.findByOid(oid);
         newBoard.setOwner(owner);
         Board createdBoard = boardService.addBoard(newBoard);
-        BoardIdDTO createdBoardDTO = modelMapper.map(createdBoard, BoardIdDTO.class);
+        AddBoardDTO createdBoardDTO = modelMapper.map(createdBoard, AddBoardDTO.class);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdBoardDTO);
     }

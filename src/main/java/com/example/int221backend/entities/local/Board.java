@@ -5,14 +5,15 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.security.SecureRandom;
+
 @Getter
 @Setter
 @Entity
 @Table(name = "board")
 public class Board {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "board_id", nullable = false, length = 36)
+    @Column(name = "board_id", nullable = false, length = 10)
     private String boardId;
 
     @ManyToOne
@@ -22,6 +23,19 @@ public class Board {
     @Column(name = "board_name", nullable = false, length = 100)
     private String name;
 
+    @PrePersist
+    protected void onCreate() {
+        this.boardId = generateBoardId();
+    }
 
-
+    private String generateBoardId() {
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder(10);
+        for (int i = 0; i < 10; i++) {
+            int randomIndex = random.nextInt(36);
+            char randomChar = (char) (randomIndex < 10 ? '0' + randomIndex : 'A' + randomIndex - 10);
+            sb.append(randomChar);
+        }
+        return sb.toString();
+    }
 }

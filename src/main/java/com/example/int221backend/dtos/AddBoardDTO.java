@@ -8,5 +8,6 @@ import lombok.Setter;
 @Setter
 @Data
 public class AddBoardDTO {
+    private String boardId;
     private String name;
 }
