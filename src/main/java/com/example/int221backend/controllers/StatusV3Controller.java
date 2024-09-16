@@ -58,8 +58,8 @@ public class StatusV3Controller {
 
     @PutMapping("/{statusId}")
     public ResponseEntity<?> updateStatus(@PathVariable String boardId, @PathVariable Integer statusId, @RequestBody AddStatusDTO statusDTO) {
-        if (!boardService.existsById(boardId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board not found");
+        if (!boardService.existsById(boardId) || !statusService.existsStatusInBoard(boardId, statusId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board or Status not found");
         }
 
         try {
@@ -70,17 +70,20 @@ public class StatusV3Controller {
         }
     }
 
+
     @DeleteMapping("/{statusId}")
     public ResponseEntity<String> deleteStatus(@PathVariable String boardId, @PathVariable Integer statusId) {
-        if (!boardService.existsById(boardId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board not found");
+        if (!boardService.existsById(boardId) || !statusService.existsStatusInBoard(boardId, statusId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Board or Status not found");
         }
 
         try {
             statusService.deleteStatus(statusId);
             return ResponseEntity.noContent().build();
         } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(null);
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         }
     }
+
+
 }

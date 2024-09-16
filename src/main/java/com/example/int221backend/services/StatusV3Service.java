@@ -28,6 +28,9 @@ public class StatusV3Service {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private BoardService boardService;
+
     public List<Status> getAllStatus(String boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board ID " + boardId + " DOES NOT EXIST!!!"));
@@ -162,4 +165,12 @@ public class StatusV3Service {
 
         statusV3Repository.delete(status);
     }
+    @Transactional
+    public boolean existsStatusInBoard(String boardId, Integer statusId) {
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board ID " + boardId + " DOES NOT EXIST!!!"));
+
+        return statusV3Repository.findByBoardAndId(board, statusId) != null;
+    }
+
 }
