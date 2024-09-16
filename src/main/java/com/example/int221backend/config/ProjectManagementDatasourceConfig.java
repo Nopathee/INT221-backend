@@ -48,7 +48,6 @@ public class ProjectManagementDatasourceConfig {
         return builder
                 .dataSource(projectManagementDataSource())
                 .packages("com.example.int221backend.entities.local")
-//                .persistenceUnit("projectManagementPU")
                 .build();
     }
 

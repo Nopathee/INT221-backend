@@ -16,10 +16,10 @@ public class Status {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "statusName", nullable = false, length = 50)
+    @Column(name = "status_name", nullable = false, length = 50)
     private String name;
 
-    @Column(name = "statusDescription", length = 200)
+    @Column(name = "status_description", length = 200)
     private String description;
 
     @Column(name = "color", length = 30)

@@ -10,8 +10,10 @@ import com.example.int221backend.repositories.local.StatusRepository;
 import com.example.int221backend.repositories.local.TaskV3Repository; // เปลี่ยนเป็น TaskV3Repository
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -58,7 +60,6 @@ public class TaskV3Service {
         return taskV3;
     }
 
-    @Transactional
     public AddTaskV2DTO addTask(AddTaskDTO addTaskV2DTO, Integer statusId, String boardId) {
 
         if (addTaskV2DTO.getTitle() == null || addTaskV2DTO.getTitle().trim().isEmpty()) {

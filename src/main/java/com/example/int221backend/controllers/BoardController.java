@@ -46,7 +46,7 @@ public class BoardController {
 
     }
 
-    @GetMapping("/{boardId}/tasks")
+    @GetMapping("/{boardId}")
     public ResponseEntity<Board> getBoardById(@PathVariable String boardId) {
         Board board = checkBoard(boardId);
         return ResponseEntity.ok(board);
