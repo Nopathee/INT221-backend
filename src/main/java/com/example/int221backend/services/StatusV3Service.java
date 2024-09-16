@@ -43,7 +43,7 @@ public class StatusV3Service {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
     }
 
-    @Transactional
+    @Transactional("projectManagementTransactionManager")
     public AddStatusDTO addStatus(AddStatusDTO addStatusDTO, String boardId) {
         validateAddStatusDTO(addStatusDTO);
 
@@ -79,7 +79,7 @@ public class StatusV3Service {
         }
     }
 
-    @Transactional
+    @Transactional("projectManagementTransactionManager")
     public Status editStatus(Status status, Integer statusId) {
         validateEditStatus(status, statusId);
 
@@ -119,7 +119,7 @@ public class StatusV3Service {
         }
     }
 
-    @Transactional
+    @Transactional("projectManagementTransactionManager")
     public void deleteStatus(Integer id) {
         Status status = statusV3Repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
@@ -135,7 +135,7 @@ public class StatusV3Service {
         statusV3Repository.delete(status);
     }
 
-    @Transactional
+    @Transactional("projectManagementTransactionManager")
     public void deleteAndTranStatus(Integer id, Integer newId) {
         if (id.equals(newId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Destination status for task transfer must be different from current status");
@@ -165,7 +165,7 @@ public class StatusV3Service {
 
         statusV3Repository.delete(status);
     }
-    @Transactional
+    @Transactional("projectManagementTransactionManager")
     public boolean existsStatusInBoard(String boardId, Integer statusId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board ID " + boardId + " DOES NOT EXIST!!!"));
