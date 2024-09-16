@@ -24,13 +24,6 @@ public class Status {
 
     @Column(name = "color", length = 30)
     private String color;
-
-    @Column(name = "created_on", updatable = false, insertable = false)
-    private ZonedDateTime createdOn;
-
-    @Column(name = "updated_on", insertable = false, updatable = false)
-    private ZonedDateTime updatedOn;
-
     @ManyToOne
     @JoinColumn(name = "board_id", nullable = false)
     private Board board;
