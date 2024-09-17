@@ -9,6 +9,6 @@ import lombok.Setter;
 @Data
 public class AddBoardDTO {
     private String name;
-    private String boardId;
+    private String id;
 
 }
