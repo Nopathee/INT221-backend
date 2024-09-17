@@ -28,6 +28,7 @@ public class TaskV2Service {
     @Autowired
     private StatusRepository statusRepository;
 
+
     public List<TaskV2> getAllTask(Set<String> filterStatuses) {
 //        return repository.findAll();
         if (filterStatuses == null || filterStatuses.isEmpty()) {
@@ -44,7 +45,7 @@ public class TaskV2Service {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + id + "DOES NOT EXIST !!!"));
     }
 
-    @Transactional
+    @Transactional("projectManagementTransactionManager")
     public AddTaskV2DTO addTask(AddTaskDTO addTaskV2DTO, Integer statusId){
 
         if (addTaskV2DTO.getTitle() == null || addTaskV2DTO.getTitle().trim().isEmpty()) {
@@ -83,14 +84,14 @@ public class TaskV2Service {
         return modelMapper.map(repository.saveAndFlush(task),taskV2DTO.getClass());
     }
 
-    @Transactional
+    @Transactional("projectManagementTransactionManager")
     public void deleteTask(Integer taskId) {
         TaskV2 task = repository.findById(taskId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + taskId + "DOES NOT EXiTS!!!"));
         repository.delete(task);
     }
 
-    @Transactional
+    @Transactional("projectManagementTransactionManager")
     public AddTaskV2DTO updateTask(TaskV2 addTaskDTO, Integer taskId , Integer statusId){
         final Integer finalStatusId;
 

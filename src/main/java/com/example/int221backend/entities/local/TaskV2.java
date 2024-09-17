@@ -34,8 +34,4 @@ public class TaskV2 {
 
     @Column(name = "updated_on", insertable = false, updatable = false)
     private ZonedDateTime updatedOn;
-
-    @ManyToOne
-    @JoinColumn(name = "board_id", nullable = false)
-    private Board board;
 }
