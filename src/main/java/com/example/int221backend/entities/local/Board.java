@@ -4,7 +4,7 @@ import com.example.int221backend.entities.shared.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
+import io.viascom.nanoid.NanoId;
 import java.security.SecureRandom;
 
 @Getter
@@ -24,18 +24,9 @@ public class Board {
     private String name;
 
     @PrePersist
-    protected void onCreate() {
-        this.boardId = generateBoardId();
-    }
-
-    private String generateBoardId() {
-        SecureRandom random = new SecureRandom();
-        StringBuilder sb = new StringBuilder(10);
-        for (int i = 0; i < 10; i++) {
-            int randomIndex = random.nextInt(36);
-            char randomChar = (char) (randomIndex < 10 ? '0' + randomIndex : 'A' + randomIndex - 10);
-            sb.append(randomChar);
+    private void prePersist() {
+        if (this.boardId == null) {
+            this.boardId = NanoId.generate(10);
         }
-        return sb.toString();
     }
 }

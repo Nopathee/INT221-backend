@@ -77,7 +77,7 @@ public class JwtService implements Serializable {
         return Jwts.builder()
                 .setHeaderParam("typ", "JWT")
                 .setClaims(claims)
-                .setSubject(subject)  // Set subject to username
+                .setSubject(subject)
                 .setIssuer("https://intproj23.sit.kmutt.ac.th/ssi3/")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
