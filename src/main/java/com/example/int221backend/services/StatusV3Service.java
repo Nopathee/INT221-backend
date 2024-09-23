@@ -31,6 +31,7 @@ public class StatusV3Service {
     @Autowired
     private BoardService boardService;
 
+    @Transactional("projectManagementTransactionManager")
     public List<Status> getAllStatus(String boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board ID " + boardId + " DOES NOT EXIST!!!"));
@@ -38,6 +39,7 @@ public class StatusV3Service {
         return statusV3Repository.findByBoard(board);
     }
 
+    @Transactional("projectManagementTransactionManager")
     public Status getStatusById(Integer id) {
         return statusV3Repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
