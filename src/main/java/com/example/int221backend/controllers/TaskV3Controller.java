@@ -60,25 +60,30 @@ public class TaskV3Controller {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getTaskById(@PathVariable String boardId, @PathVariable Integer id,@RequestHeader("Authorization") String token) {
-        String jwtToken = token.substring(7);
-        String userId = jwtService.getOidFromToken(jwtToken);
+    public ResponseEntity<?> getTaskById(
+            @PathVariable String boardId,
+            @PathVariable Integer id,
+            @RequestHeader("Authorization") String token
+    ) {
+        try {
+            // Extract and validate token
+            String jwtToken = token.substring(7);
+            String userId = jwtService.getOidFromToken(jwtToken);
 
-        Board board = boardService.getBoardByBoardId(boardId);
+            // Check if the board exists
+            Board board = boardService.getBoardByBoardId(boardId);
+            System.out.println(id);
+            // Check if the task exists
+            TaskV3 task = taskV3Service.getTaskById(id, boardId);
 
-        if (board == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "Board not found"));
+            // Return the task if everything is valid
+            return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
+
+        } catch (ResponseStatusException e) {
+            // Catch and return a proper status for token-related issues or other exceptions
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(Collections.singletonMap("error", e.getReason()));
         }
-
-
-        TaskV3 task = taskV3Service.getTaskById(id, boardId);
-        if (task == null || !task.getBoard().getBoardId().equals(boardId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "Task not found in the specified board"));
-        }
-
-        return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
     }
 
     @PostMapping("")

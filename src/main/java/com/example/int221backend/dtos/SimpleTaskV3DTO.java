@@ -10,6 +10,7 @@ import lombok.Setter;
 public class SimpleTaskV3DTO {
     private String id;
     private String title;
+    private String description;
     private String assignees;
     private Status status;
 }
