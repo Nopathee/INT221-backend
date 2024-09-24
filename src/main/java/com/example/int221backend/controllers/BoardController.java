@@ -5,6 +5,7 @@ import com.example.int221backend.dtos.AddStatusDTO;
 import com.example.int221backend.dtos.BoardIdDTO;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.UserLocal;
+import com.example.int221backend.exception.BadRequestException;
 import com.example.int221backend.services.UserService;
 import com.example.int221backend.services.BoardService;
 import com.example.int221backend.services.JwtService;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,11 +50,15 @@ public class BoardController {
     }
 
     @GetMapping("/{boardId}")
-    public ResponseEntity<Board> getBoardById(@PathVariable String boardId) {
-        try{
-            Board board = checkBoard(boardId);
-            return ResponseEntity.ok(board);
-        } catch (ResponseStatusException e){
+    public ResponseEntity<BoardIdDTO> getBoardById(@PathVariable String boardId,@RequestHeader ("Authorization") String token) {
+        try {
+            String afterSubToken = token.substring(7);
+            String oid = jwtService.getOidFromToken(afterSubToken);
+
+            Board board = boardService.getBoardByBoardId(boardId);
+            BoardIdDTO boardIdDTO = modelMapper.map(board, BoardIdDTO.class);
+            return ResponseEntity.ok(boardIdDTO);
+        } catch (Exception e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
@@ -69,30 +75,73 @@ public class BoardController {
         return ResponseEntity.ok(boardIdDTOS);
     }
 
+//    @PostMapping("")
+//    public ResponseEntity<?> createBoard(
+//            @RequestHeader("Authorization") String token,
+//            @RequestBody(required = false) AddBoardDTO addBoardDTO) {
+//
+//        if (token == null) {
+//            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("the access token has expired or is invalid");
+//        }
+//
+//        if (addBoardDTO == null || addBoardDTO.getName() == null || addBoardDTO.getName().isEmpty()) {
+//            throw new BadRequestException("boardName is null, empty");
+//        }
+//
+//        if (addBoardDTO.getName().length() > MAX_LENGTH) {
+//            throw new BadRequestException("boardName length > MAX-LENGTH");
+//        }
+//
+//
+//        String afterSubToken = token.substring(7);
+//        String oid = jwtService.getOidFromToken(afterSubToken);
+//        Board newBoard = new Board();
+//        newBoard.setName(addBoardDTO.getName());
+//        UserLocal owner = userService.findByOid(oid);
+//        newBoard.setOwner(owner);
+//        Board createdBoard = boardService.addBoard(newBoard);
+//        AddBoardDTO createdBoardDTO = modelMapper.map(createdBoard, AddBoardDTO.class);
+//
+//        return ResponseEntity.status(HttpStatus.CREATED).body(createdBoardDTO);
+//    }
+
     @PostMapping("")
     public ResponseEntity<?> createBoard(
             @RequestHeader("Authorization") String token,
             @RequestBody(required = false) AddBoardDTO addBoardDTO) {
 
-        if (token == null) {
-            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("the access token has expired or is invalid");
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("error", "The access token has expired or is invalid"));
         }
 
+        // Extract OID from token
+        String afterSubToken = token.substring(7);
+        String oid;
+        try {
+            oid = jwtService.getOidFromToken(afterSubToken);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("error", "Invalid token"));
+        }
+
+        // Validate addBoardDTO
         if (addBoardDTO == null || addBoardDTO.getName() == null || addBoardDTO.getName().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("boardName is null, empty, or length > MAX-LENGTH");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", "boardName is null, empty, or length > MAX-LENGTH"));
         }
 
         if (addBoardDTO.getName().length() > MAX_LENGTH) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("boardName is null, empty, or length > MAX-LENGTH");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", "boardName exceeds the maximum allowed length"));
         }
 
-
-        String afterSubToken = token.substring(7);
-        String oid = jwtService.getOidFromToken(afterSubToken);
+        // Create and save the board
         Board newBoard = new Board();
         newBoard.setName(addBoardDTO.getName());
         UserLocal owner = userService.findByOid(oid);
         newBoard.setOwner(owner);
+
         Board createdBoard = boardService.addBoard(newBoard);
         AddBoardDTO createdBoardDTO = modelMapper.map(createdBoard, AddBoardDTO.class);
 

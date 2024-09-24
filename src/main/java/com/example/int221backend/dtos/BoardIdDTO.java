@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 @Data
 public class BoardIdDTO {
-    private String boardId;
+    private String id;
 }
