@@ -7,7 +7,9 @@ import com.example.int221backend.repositories.shared.UserRepository;
 import org.bouncycastle.math.raw.Mod;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +35,7 @@ public class BoardService {
 
     public Board getBoardByBoardId(String boardId) {
         return boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("Board ID " + boardId + " does not exist"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Board ID " + boardId + " does not exist"));
     }
 
     public boolean existsById(String boardId) {

@@ -49,8 +49,12 @@ public class BoardController {
 
     @GetMapping("/{boardId}")
     public ResponseEntity<Board> getBoardById(@PathVariable String boardId) {
-        Board board = checkBoard(boardId);
-        return ResponseEntity.ok(board);
+        try{
+            Board board = checkBoard(boardId);
+            return ResponseEntity.ok(board);
+        } catch (ResponseStatusException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
     @GetMapping("")
