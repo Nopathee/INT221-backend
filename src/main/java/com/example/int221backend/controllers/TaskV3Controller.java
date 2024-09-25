@@ -1,10 +1,13 @@
 package com.example.int221backend.controllers;
 
+import com.example.int221backend.dtos.AddStatusDTO;
 import com.example.int221backend.dtos.AddTaskDTO;
 import com.example.int221backend.dtos.AddTaskV2DTO;
 import com.example.int221backend.dtos.SimpleTaskV3DTO;
 import com.example.int221backend.entities.local.Board;
+import com.example.int221backend.entities.local.Status;
 import com.example.int221backend.entities.local.TaskV3;
+import com.example.int221backend.exception.ForBiddenException;
 import com.example.int221backend.services.BoardService;
 import com.example.int221backend.services.JwtService;
 import com.example.int221backend.services.StatusV3Service;
@@ -66,15 +69,21 @@ public class TaskV3Controller {
             @RequestHeader("Authorization") String token
     ) {
         try {
-            String jwtToken = token.substring(7);
-            String userId = jwtService.getOidFromToken(jwtToken);
+            String afterSubToken = token.substring(7);
+
+            String oid = jwtService.getOidFromToken(afterSubToken);
 
             Board board = boardService.getBoardByBoardId(boardId);
-            System.out.println(id);
-            TaskV3 task = taskV3Service.getTaskById(id, boardId);
+            boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
+            boolean isOwner = board.getOwner().getOid().equals(oid);
 
-            return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
+            if (isOwner || isPublic){
+                TaskV3 task = taskV3Service.getTaskById(id, boardId);
 
+                return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
+            }else {
+                throw new ForBiddenException("Access denies");
+            }
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(Collections.singletonMap("error", e.getReason()));
@@ -82,7 +91,7 @@ public class TaskV3Controller {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> addTask(@PathVariable String boardId, @RequestBody AddTaskDTO addTaskDTO) {
+    public ResponseEntity<?> addTask(@PathVariable String boardId, @RequestBody AddTaskDTO addTaskDTO ,@RequestHeader("Authorization") String token) {
         try {
             if (!boardService.existsById(boardId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -107,10 +116,21 @@ public class TaskV3Controller {
                 addTaskDTO.setAssignees(null);
             }
 
-            Integer statusId = addTaskDTO.getStatus();
-            AddTaskV2DTO newTask = taskV3Service.addTask(addTaskDTO, statusId, boardId);
+            String afterSubToken = token.substring(7);
 
-            return new ResponseEntity<>(newTask, HttpStatus.CREATED);
+            String oid = jwtService.getOidFromToken(afterSubToken);
+
+            Board board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            if (isOwner){
+                Integer statusId = addTaskDTO.getStatus();
+                AddTaskV2DTO newTask = taskV3Service.addTask(addTaskDTO, statusId, boardId);
+
+                return new ResponseEntity<>(newTask, HttpStatus.CREATED);
+            }else {
+                throw new ForBiddenException("Access denies");
+            }
 
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
@@ -119,15 +139,28 @@ public class TaskV3Controller {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTask(@PathVariable String boardId, @PathVariable Integer id) {
+    public ResponseEntity<?> deleteTask(@PathVariable String boardId, @PathVariable Integer id,@RequestHeader("Authorization") String token) {
         try {
             if (!boardService.existsById(boardId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Collections.singletonMap("error", "Board not found"));
             }
 
-            taskV3Service.deleteTask(id, boardId);
-            return ResponseEntity.ok().build();
+            String afterSubToken = token.substring(7);
+
+            String oid = jwtService.getOidFromToken(afterSubToken);
+
+            Board board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            if (isOwner){
+                taskV3Service.deleteTask(id, boardId);
+                return ResponseEntity.ok().build();
+            }else {
+                throw new ForBiddenException("Access denies");
+            }
+
+
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(Collections.singletonMap("error", e.getReason()));
@@ -135,7 +168,7 @@ public class TaskV3Controller {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTask(@PathVariable String boardId, @PathVariable Integer id, @RequestBody AddTaskDTO addTaskDTO) {
+    public ResponseEntity<?> updateTask(@PathVariable String boardId, @PathVariable Integer id, @RequestBody AddTaskDTO addTaskDTO,@RequestHeader("Authorization") String token) {
         try {
             if (!boardService.existsById(boardId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -152,11 +185,24 @@ public class TaskV3Controller {
                 addTaskDTO.setAssignees(addTaskDTO.getAssignees().isEmpty() ? null : addTaskDTO.getAssignees().trim());
             }
 
-            Integer status = addTaskDTO.getStatus();
-            TaskV3 editedTask = modelMapper.map(addTaskDTO, TaskV3.class);
+            String afterSubToken = token.substring(7);
 
-            AddTaskV2DTO updatedTask = taskV3Service.updateTask(editedTask, id, status, boardId);
-            return ResponseEntity.ok(updatedTask);
+            String oid = jwtService.getOidFromToken(afterSubToken);
+
+            Board board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            if (isOwner){
+                Integer status = addTaskDTO.getStatus();
+                TaskV3 editedTask = modelMapper.map(addTaskDTO, TaskV3.class);
+
+                AddTaskV2DTO updatedTask = taskV3Service.updateTask(editedTask, id, status, boardId);
+                return ResponseEntity.ok(updatedTask);
+
+            }else {
+                throw new ForBiddenException("Access denies");
+            }
+
 
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())

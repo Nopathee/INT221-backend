@@ -3,9 +3,12 @@ package com.example.int221backend.controllers;
 import com.example.int221backend.dtos.AddBoardDTO;
 import com.example.int221backend.dtos.AddStatusDTO;
 import com.example.int221backend.dtos.BoardIdDTO;
+import com.example.int221backend.entities.BoardVisi;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.UserLocal;
 import com.example.int221backend.exception.BadRequestException;
+import com.example.int221backend.exception.ForBiddenException;
+import com.example.int221backend.repositories.local.BoardRepository;
 import com.example.int221backend.services.UserService;
 import com.example.int221backend.services.BoardService;
 import com.example.int221backend.services.JwtService;
@@ -19,9 +22,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = {"http://localhost:5173","http://ip23ssi3.sit.kmutt.ac.th","http://intproj23.sit.kmutt.ac.th"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://ip23ssi3.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
 @RestController
 @RequestMapping("v3/boards")
 public class BoardController {
@@ -38,6 +42,8 @@ public class BoardController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private BoardRepository boardRepository;
 
     private Board checkBoard(String boardId) {
         Board board = boardService.getBoardByBoardId(boardId);
@@ -50,21 +56,29 @@ public class BoardController {
     }
 
     @GetMapping("/{boardId}")
-    public ResponseEntity<BoardIdDTO> getBoardById(@PathVariable String boardId,@RequestHeader ("Authorization") String token) {
+    public ResponseEntity<BoardIdDTO> getBoardById(@PathVariable String boardId, @RequestHeader("Authorization") String token) {
         try {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
 
             Board board = boardService.getBoardByBoardId(boardId);
-            BoardIdDTO boardIdDTO = modelMapper.map(board, BoardIdDTO.class);
-            return ResponseEntity.ok(boardIdDTO);
-        } catch (Exception e){
+            boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
+            boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            if (isOwner || isPublic){
+                BoardIdDTO boardIdDTO = modelMapper.map(board, BoardIdDTO.class);
+                return ResponseEntity.ok(boardIdDTO);
+            }else {
+                throw new ForBiddenException("Access denies");
+            }
+
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
     @GetMapping("")
-    public ResponseEntity<List<BoardIdDTO>> getAllBoard(@RequestHeader ("Authorization") String token) {
+    public ResponseEntity<List<BoardIdDTO>> getAllBoard(@RequestHeader("Authorization") String token) {
         String afterSubToken = token.substring(7);
         String oid = jwtService.getOidFromToken(afterSubToken);
         System.out.println(oid);
@@ -115,7 +129,6 @@ public class BoardController {
                     .body(Collections.singletonMap("error", "The access token has expired or is invalid"));
         }
 
-        // Extract OID from token
         String afterSubToken = token.substring(7);
         String oid;
         try {
@@ -125,18 +138,7 @@ public class BoardController {
                     .body(Collections.singletonMap("error", "Invalid token"));
         }
 
-        // Validate addBoardDTO
-        if (addBoardDTO == null || addBoardDTO.getName() == null || addBoardDTO.getName().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Collections.singletonMap("error", "boardName is null, empty, or length > MAX-LENGTH"));
-        }
 
-        if (addBoardDTO.getName().length() > MAX_LENGTH) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Collections.singletonMap("error", "boardName exceeds the maximum allowed length"));
-        }
-
-        // Create and save the board
         Board newBoard = new Board();
         newBoard.setName(addBoardDTO.getName());
         UserLocal owner = userService.findByOid(oid);
@@ -148,8 +150,42 @@ public class BoardController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdBoardDTO);
     }
 
+    @PatchMapping("/{boardId}")
+    public ResponseEntity<?> editVisibilityBoard(@RequestHeader("Authorization") String token,
+                                                 @RequestParam String boardId,
+                                                 @RequestBody Map<String,String> body){
+        String visibility = body.get("visibility");
 
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("error", "The access token has expired or is invalid"));
+        }
 
+        String afterSubToken = token.substring(7);
+        String oid;
+        try {
+            oid = jwtService.getOidFromToken(afterSubToken);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("error", "Invalid token"));
+        }
+
+        Board board = boardService.getBoardByBoardId(boardId);
+
+        if (board.getVisibility().toString().equals(visibility)){
+            throw new BadRequestException("visibility should be changed");
+        }
+
+        if (!visibility.equalsIgnoreCase("public") && !visibility.equalsIgnoreCase("private")){
+            throw new BadRequestException("visibility should be public or private");
+        }
+
+        board.setVisibility(BoardVisi.valueOf(visibility.toUpperCase()));
+
+        boardRepository.save(board);
+
+        return ResponseEntity.ok(visibility);
+    }
 }
 
 

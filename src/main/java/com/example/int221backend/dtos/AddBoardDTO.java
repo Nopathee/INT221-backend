@@ -1,5 +1,6 @@
 package com.example.int221backend.dtos;
 
+import com.example.int221backend.entities.BoardVisi;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,5 +11,6 @@ import lombok.Setter;
 public class AddBoardDTO {
     private String name;
     private String id;
+    private String visibility;
 
 }

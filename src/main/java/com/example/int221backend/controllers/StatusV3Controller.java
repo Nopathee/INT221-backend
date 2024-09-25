@@ -1,8 +1,12 @@
 package com.example.int221backend.controllers;
 
 import com.example.int221backend.dtos.AddStatusDTO;
+import com.example.int221backend.dtos.BoardIdDTO;
+import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
+import com.example.int221backend.exception.ForBiddenException;
 import com.example.int221backend.services.BoardService;
+import com.example.int221backend.services.JwtService;
 import com.example.int221backend.services.StatusV3Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +33,9 @@ public class StatusV3Controller {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private JwtService jwtService;
+
     @GetMapping("")
     public ResponseEntity<Object> getAllStatuses(@PathVariable String boardId) {
         if (!boardService.existsById(boardId)) {
@@ -45,26 +52,53 @@ public class StatusV3Controller {
     }
 
     @GetMapping("/{statusId}")
-    public ResponseEntity<?> getStatusById(@PathVariable String boardId, @PathVariable Integer statusId){
+    public ResponseEntity<?> getStatusById(@PathVariable String boardId, @PathVariable Integer statusId , @RequestHeader ("Authorization") String token){
         if (!boardService.existsById(boardId) || !statusService.existsStatusInBoard(boardId, statusId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board or Status not found"));
         }
+        String afterSubToken = token.substring(7);
 
-        Status status = statusService.getStatusById(statusId);
-        return ResponseEntity.ok(modelMapper.map(status, AddStatusDTO.class));
+        String oid = jwtService.getOidFromToken(afterSubToken);
+
+        Board board = boardService.getBoardByBoardId(boardId);
+        boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
+        boolean isOwner = board.getOwner().getOid().equals(oid);
+
+        if (isOwner || isPublic){
+            Status status = statusService.getStatusById(statusId);
+            return ResponseEntity.ok(modelMapper.map(status, AddStatusDTO.class));
+        }else {
+            throw new ForBiddenException("Access denies");
+        }
+
+
     }
 
     @PostMapping("")
-    public ResponseEntity<?> addStatus(@PathVariable String boardId, @RequestBody AddStatusDTO statusDTO) {
+    public ResponseEntity<?> addStatus(@PathVariable String boardId, @RequestBody AddStatusDTO statusDTO,@RequestHeader("Authorization") String token) {
         if (!boardService.existsById(boardId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board not found"));
         }
 
         try {
-            AddStatusDTO newStatus = statusService.addStatus(statusDTO, boardId);
-            return new ResponseEntity<>(newStatus, HttpStatus.CREATED);
+
+            String afterSubToken = token.substring(7);
+
+            String oid = jwtService.getOidFromToken(afterSubToken);
+
+            Board board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            if (isOwner){
+                AddStatusDTO newStatus = statusService.addStatus(statusDTO, boardId);
+                return new ResponseEntity<>(newStatus, HttpStatus.CREATED);
+            }else {
+                throw new ForBiddenException("Access denies");
+            }
+
+
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(Collections.singletonMap("error", e.getReason()));
@@ -72,15 +106,29 @@ public class StatusV3Controller {
     }
 
     @PutMapping("/{statusId}")
-    public ResponseEntity<?> updateStatus(@PathVariable String boardId, @PathVariable Integer statusId, @RequestBody AddStatusDTO statusDTO) {
+    public ResponseEntity<?> updateStatus(@PathVariable String boardId, @PathVariable Integer statusId, @RequestBody AddStatusDTO statusDTO , @RequestHeader("Authorization") String token) {
         if (!boardService.existsById(boardId) || !statusService.existsStatusInBoard(boardId, statusId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board or Status not found"));
         }
 
         try {
-            Status updatedStatus = statusService.editStatus(modelMapper.map(statusDTO, Status.class), statusId);
-            return ResponseEntity.ok(modelMapper.map(updatedStatus, AddStatusDTO.class));
+
+            String afterSubToken = token.substring(7);
+
+            String oid = jwtService.getOidFromToken(afterSubToken);
+
+            Board board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            if (isOwner){
+                Status updatedStatus = statusService.editStatus(modelMapper.map(statusDTO, Status.class), statusId);
+                return ResponseEntity.ok(modelMapper.map(updatedStatus, AddStatusDTO.class));
+            }else {
+                throw new ForBiddenException("Access denies");
+            }
+
+
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(Collections.singletonMap("error", e.getReason()));
@@ -88,15 +136,29 @@ public class StatusV3Controller {
     }
 
     @DeleteMapping("/{statusId}")
-    public ResponseEntity<?> deleteStatus(@PathVariable String boardId, @PathVariable Integer statusId) {
+    public ResponseEntity<?> deleteStatus(@PathVariable String boardId, @PathVariable Integer statusId , @RequestHeader("Authorization") String token) {
         if (!boardService.existsById(boardId) || !statusService.existsStatusInBoard(boardId, statusId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board or Status not found"));
         }
 
         try {
-            statusService.deleteStatus(statusId);
-            return ResponseEntity.ok().build();
+
+            String afterSubToken = token.substring(7);
+
+            String oid = jwtService.getOidFromToken(afterSubToken);
+
+            Board board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            if (isOwner){
+                statusService.deleteStatus(statusId);
+                return ResponseEntity.ok().build();
+            }else {
+                throw new ForBiddenException("Access denies");
+            }
+
+
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(Collections.singletonMap("error", e.getReason()));
@@ -104,15 +166,27 @@ public class StatusV3Controller {
     }
 
     @DeleteMapping("/{id}/{newId}")
-    public ResponseEntity<?> deleteAndTransferStatus(@PathVariable String boardId, @PathVariable Integer id, @PathVariable Integer newId) {
+    public ResponseEntity<?> deleteAndTransferStatus(@PathVariable String boardId, @PathVariable Integer id, @PathVariable Integer newId ,@RequestHeader("Authorization") String token) {
         if (!boardService.existsById(boardId) || !statusService.existsStatusInBoard(boardId, id) || !statusService.existsStatusInBoard(boardId, newId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board or Status not found"));
         }
 
         try {
-            statusService.deleteAndTranStatus(id, newId);
-            return ResponseEntity.ok().build();
+
+            String afterSubToken = token.substring(7);
+
+            String oid = jwtService.getOidFromToken(afterSubToken);
+
+            Board board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            if (isOwner){
+                statusService.deleteAndTranStatus(id, newId);
+                return ResponseEntity.ok().build();
+            }else {
+                throw new ForBiddenException("Access denies");
+            }
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(Collections.singletonMap("error", e.getReason()));

@@ -71,4 +71,15 @@ public class GlobalException {
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
+
+    @ExceptionHandler(ForBiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForBiddenException(ForBiddenException ex){
+        ErrorResponse errorResponse = new ErrorResponse(
+                ZonedDateTime.now(),
+                HttpStatus.FORBIDDEN.value(),
+                "For Bidden",
+                ex.getMessage()
+        );
+        return new ResponseEntity<>(errorResponse,HttpStatus.FORBIDDEN);
+    }
 }
