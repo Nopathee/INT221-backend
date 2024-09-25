@@ -66,21 +66,16 @@ public class TaskV3Controller {
             @RequestHeader("Authorization") String token
     ) {
         try {
-            // Extract and validate token
             String jwtToken = token.substring(7);
             String userId = jwtService.getOidFromToken(jwtToken);
 
-            // Check if the board exists
             Board board = boardService.getBoardByBoardId(boardId);
             System.out.println(id);
-            // Check if the task exists
             TaskV3 task = taskV3Service.getTaskById(id, boardId);
 
-            // Return the task if everything is valid
             return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
 
         } catch (ResponseStatusException e) {
-            // Catch and return a proper status for token-related issues or other exceptions
             return ResponseEntity.status(e.getStatusCode())
                     .body(Collections.singletonMap("error", e.getReason()));
         }
