@@ -25,6 +25,7 @@ public class Board {
     private String name;
 
     @Column(name = "visibility")
+    @Enumerated(EnumType.STRING)
     private BoardVisi visibility;
 
     @PrePersist
