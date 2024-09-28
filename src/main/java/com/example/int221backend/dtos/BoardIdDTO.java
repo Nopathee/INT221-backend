@@ -9,4 +9,5 @@ import lombok.Setter;
 @Data
 public class BoardIdDTO {
     private String id;
+    private String boardName;
 }
