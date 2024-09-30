@@ -4,6 +4,7 @@ import com.example.int221backend.dtos.AddStatusDTO;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
 import com.example.int221backend.entities.local.TaskV3;
+import com.example.int221backend.exception.ItemNotFoundException;
 import com.example.int221backend.repositories.local.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +41,13 @@ public class StatusV3Service {
     }
 
     @Transactional("projectManagementTransactionManager")
-    public Status getStatusById(Integer id) {
-        return statusV3Repository.findById(id)
+    public Status getStatusById(Integer id, String boardId) {
+        Status status = statusV3Repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
+        if (!status.getBoard().getBoardId().equals(boardId)){
+            throw new ItemNotFoundException("Board not found");
+        }
+        return status;
     }
 
     @Transactional("projectManagementTransactionManager")

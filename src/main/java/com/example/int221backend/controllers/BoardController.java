@@ -56,38 +56,75 @@ public class BoardController {
     }
 
     @GetMapping("/{boardId}")
-    public ResponseEntity<BoardIdDTO> getBoardById(@PathVariable String boardId, @RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> getBoardById(
+            @PathVariable String boardId,
+            @RequestHeader(value = "Authorization", required = false) String token
+    ) {
+        if (!boardService.existsById(boardId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "Board not found"));
+        }
+
+        Board board = boardService.getBoardByBoardId(boardId);
+        boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
+
+        // Check if the token is null or empty
+        if (token == null || token.isEmpty()) {
+            if (!isPublic) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Access denied to private board"));
+            } else {
+                BoardIdDTO boardIdDTO = modelMapper.map(board, BoardIdDTO.class);
+                return ResponseEntity.ok(boardIdDTO);
+            }
+        }
+
+        // Process the token if it's present
+        try {
+            String afterSubToken = token.substring(7);
+            String oid = jwtService.getOidFromToken(afterSubToken);
+            boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            // Check if the user is not the owner of the private board
+            if (!isOwner && !isPublic) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Access denied to private board"));
+            }
+
+            BoardIdDTO boardIdDTO = modelMapper.map(board, BoardIdDTO.class);
+            return ResponseEntity.ok(boardIdDTO);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "Board ID not found"));
+        }
+    }
+
+
+
+    @GetMapping("")
+    public ResponseEntity<List<BoardIdDTO>> getAllBoard(
+            @RequestHeader(value = "Authorization", required = false) String token
+    ) {
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(null);
+        }
+
         try {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
 
-            Board board = boardService.getBoardByBoardId(boardId);
-            boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
-            boolean isOwner = board.getOwner().getOid().equals(oid);
-
-            if (isOwner || isPublic){
-                BoardIdDTO boardIdDTO = modelMapper.map(board, BoardIdDTO.class);
-                return ResponseEntity.ok(boardIdDTO);
-            }else {
-                throw new ForBiddenException("Access denies");
-            }
-
+            List<Board> boards = boardService.getAllBoard(oid);
+            List<BoardIdDTO> boardIdDTOS = boards.stream()
+                    .map(board -> modelMapper.map(board, BoardIdDTO.class))
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(boardIdDTOS);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve boards");
         }
     }
 
-    @GetMapping("")
-    public ResponseEntity<List<BoardIdDTO>> getAllBoard(@RequestHeader("Authorization") String token) {
-        String afterSubToken = token.substring(7);
-        String oid = jwtService.getOidFromToken(afterSubToken);
-        System.out.println(oid);
-        List<Board> boards = boardService.getAllBoard(oid);
-        List<BoardIdDTO> boardIdDTOS = boards.stream()
-                .map(board -> modelMapper.map(board, BoardIdDTO.class))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(boardIdDTOS);
-    }
 
 //    @PostMapping("")
 //    public ResponseEntity<?> createBoard(
@@ -172,12 +209,9 @@ public class BoardController {
 
         Board board = boardService.getBoardByBoardId(boardId);
 
-        if (board.getVisibility().toString().equals(visibility)){
-            throw new BadRequestException("visibility should be changed");
-        }
-
         if (!visibility.equalsIgnoreCase("public") && !visibility.equalsIgnoreCase("private")){
-            throw new BadRequestException("visibility should be public or private");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", "visibility should be private or public"));
         }
 
         board.setVisibility(BoardVisi.valueOf(visibility.toUpperCase()));

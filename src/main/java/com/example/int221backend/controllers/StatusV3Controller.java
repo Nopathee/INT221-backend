@@ -37,98 +37,160 @@ public class StatusV3Controller {
     private JwtService jwtService;
 
     @GetMapping("")
-    public ResponseEntity<Object> getAllStatuses(@PathVariable String boardId) {
+    public ResponseEntity<Object> getAllStatuses(
+            @PathVariable String boardId,
+            @RequestHeader(value = "Authorization", required = false) String token
+    ) {
         if (!boardService.existsById(boardId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board not found"));
         }
-
-        List<Status> statuses = statusService.getAllStatus(boardId);
-        List<AddStatusDTO> statusDTOs = statuses.stream()
-                .map(status -> modelMapper.map(status, AddStatusDTO.class))
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(statusDTOs);
-    }
-
-    @GetMapping("/{statusId}")
-    public ResponseEntity<?> getStatusById(@PathVariable String boardId, @PathVariable Integer statusId , @RequestHeader ("Authorization") String token){
-        if (!boardService.existsById(boardId) || !statusService.existsStatusInBoard(boardId, statusId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "Board or Status not found"));
-        }
-        String afterSubToken = token.substring(7);
-
-        String oid = jwtService.getOidFromToken(afterSubToken);
 
         Board board = boardService.getBoardByBoardId(boardId);
         boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
-        boolean isOwner = board.getOwner().getOid().equals(oid);
 
-        if (isOwner || isPublic){
-            Status status = statusService.getStatusById(statusId);
-            return ResponseEntity.ok(modelMapper.map(status, AddStatusDTO.class));
-        }else {
-            throw new ForBiddenException("Access denies");
+        // Check if the token is null or empty
+        if (token == null || token.isEmpty()) {
+            if (!isPublic) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Access denied to private board"));
+            } else {
+                List<Status> statuses = statusService.getAllStatus(boardId);
+                List<AddStatusDTO> statusDTOs = statuses.stream()
+                        .map(status -> modelMapper.map(status, AddStatusDTO.class))
+                        .collect(Collectors.toList());
+                return ResponseEntity.ok(statusDTOs);
+            }
         }
 
+        // Process the token if it's present
+        try {
+            String afterSubToken = token.substring(7);
+            String oid = jwtService.getOidFromToken(afterSubToken);
+            boolean isOwner = board.getOwner().getOid().equals(oid);
 
+            // Check if the user is not the owner of the private board
+            if (!isOwner && !isPublic) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Access denied to private board"));
+            }
+
+            List<Status> statuses = statusService.getAllStatus(boardId);
+            List<AddStatusDTO> statusDTOs = statuses.stream()
+                    .map(status -> modelMapper.map(status, AddStatusDTO.class))
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(statusDTOs);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Failed to retrieve statuses"));
+        }
     }
 
-    @PostMapping("")
-    public ResponseEntity<?> addStatus(@PathVariable String boardId, @RequestBody AddStatusDTO statusDTO,@RequestHeader("Authorization") String token) {
+
+
+    @GetMapping("/{statusId}")
+    public ResponseEntity<?> getStatusById(
+            @PathVariable String boardId,
+            @PathVariable Integer statusId,
+            @RequestHeader(value = "Authorization", required = false) String token
+    ) {
         if (!boardService.existsById(boardId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board not found"));
         }
 
+        if (token == null || token.isEmpty()) {
+            // Assuming public boards allow access without authentication
+            Board board = boardService.getBoardByBoardId(boardId);
+            if (board.getVisibility().toString().equalsIgnoreCase("public")) {
+                Status status = statusService.getStatusById(statusId, boardId);
+                return ResponseEntity.ok(modelMapper.map(status, AddStatusDTO.class));
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Access denied"));
+            }
+        }
+
         try {
-
             String afterSubToken = token.substring(7);
-
             String oid = jwtService.getOidFromToken(afterSubToken);
 
             Board board = boardService.getBoardByBoardId(boardId);
             boolean isOwner = board.getOwner().getOid().equals(oid);
+            boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
 
-            if (isOwner){
-                AddStatusDTO newStatus = statusService.addStatus(statusDTO, boardId);
-                return new ResponseEntity<>(newStatus, HttpStatus.CREATED);
-            }else {
-                throw new ForBiddenException("Access denies");
+            if (isOwner || isPublic) {
+                Status status = statusService.getStatusById(statusId, boardId);
+                return ResponseEntity.ok(modelMapper.map(status, AddStatusDTO.class));
+            } else {
+                throw new ForBiddenException("Access denied");
             }
-
-
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(Collections.singletonMap("error", e.getReason()));
         }
     }
 
+
+    @PostMapping("")
+    public ResponseEntity<?> addStatus(@PathVariable String boardId, @RequestBody(required = false) AddStatusDTO statusDTO, @RequestHeader("Authorization") String token) {
+        if (!boardService.existsById(boardId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "Board not found"));
+        }
+
+        if (statusDTO == null || statusDTO.getName() == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Collections.singletonMap("error", "Access denied, request body required"));
+        }
+
+        try {
+            String afterSubToken = token.substring(7);
+            String oid = jwtService.getOidFromToken(afterSubToken);
+            Board board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            if (!isOwner) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Access denied to private board"));
+            }
+
+            AddStatusDTO newStatus = statusService.addStatus(statusDTO, boardId);
+            return new ResponseEntity<>(newStatus, HttpStatus.CREATED);
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(Collections.singletonMap("error", e.getReason()));
+        }
+    }
+
+
     @PutMapping("/{statusId}")
-    public ResponseEntity<?> updateStatus(@PathVariable String boardId, @PathVariable Integer statusId, @RequestBody AddStatusDTO statusDTO , @RequestHeader("Authorization") String token) {
-        if (!boardService.existsById(boardId) || !statusService.existsStatusInBoard(boardId, statusId)) {
+    public ResponseEntity<?> updateStatus(@PathVariable String boardId, @PathVariable Integer statusId, @RequestBody(required = false) AddStatusDTO statusDTO, @RequestHeader("Authorization") String token) {
+        if (!boardService.existsById(boardId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board or Status not found"));
         }
 
+        // Check if the request body is null or empty
+        if (statusDTO == null || statusDTO.getName() == null) { // Add your own validation logic for required fields
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Collections.singletonMap("error", "Access denied, request body required"));
+        }
+
         try {
-
             String afterSubToken = token.substring(7);
-
             String oid = jwtService.getOidFromToken(afterSubToken);
-
             Board board = boardService.getBoardByBoardId(boardId);
             boolean isOwner = board.getOwner().getOid().equals(oid);
 
-            if (isOwner){
-                Status updatedStatus = statusService.editStatus(modelMapper.map(statusDTO, Status.class), statusId);
-                return ResponseEntity.ok(modelMapper.map(updatedStatus, AddStatusDTO.class));
-            }else {
-                throw new ForBiddenException("Access denies");
+            if (!isOwner) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Access denied to private board"));
             }
 
-
+            Status updatedStatus = statusService.editStatus(modelMapper.map(statusDTO, Status.class), statusId);
+            return ResponseEntity.ok(modelMapper.map(updatedStatus, AddStatusDTO.class));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
                     .body(Collections.singletonMap("error", e.getReason()));
@@ -136,8 +198,8 @@ public class StatusV3Controller {
     }
 
     @DeleteMapping("/{statusId}")
-    public ResponseEntity<?> deleteStatus(@PathVariable String boardId, @PathVariable Integer statusId , @RequestHeader("Authorization") String token) {
-        if (!boardService.existsById(boardId) || !statusService.existsStatusInBoard(boardId, statusId)) {
+    public ResponseEntity<?> deleteStatus(@PathVariable String boardId, @PathVariable Integer statusId, @RequestHeader("Authorization") String token) {
+        if (!boardService.existsById(boardId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board or Status not found"));
         }
@@ -151,10 +213,10 @@ public class StatusV3Controller {
             Board board = boardService.getBoardByBoardId(boardId);
             boolean isOwner = board.getOwner().getOid().equals(oid);
 
-            if (isOwner){
+            if (isOwner) {
                 statusService.deleteStatus(statusId);
                 return ResponseEntity.ok().build();
-            }else {
+            } else {
                 throw new ForBiddenException("Access denies");
             }
 
@@ -166,7 +228,7 @@ public class StatusV3Controller {
     }
 
     @DeleteMapping("/{id}/{newId}")
-    public ResponseEntity<?> deleteAndTransferStatus(@PathVariable String boardId, @PathVariable Integer id, @PathVariable Integer newId ,@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> deleteAndTransferStatus(@PathVariable String boardId, @PathVariable Integer id, @PathVariable Integer newId, @RequestHeader("Authorization") String token) {
         if (!boardService.existsById(boardId) || !statusService.existsStatusInBoard(boardId, id) || !statusService.existsStatusInBoard(boardId, newId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board or Status not found"));
@@ -181,10 +243,10 @@ public class StatusV3Controller {
             Board board = boardService.getBoardByBoardId(boardId);
             boolean isOwner = board.getOwner().getOid().equals(oid);
 
-            if (isOwner){
+            if (isOwner) {
                 statusService.deleteAndTranStatus(id, newId);
                 return ResponseEntity.ok().build();
-            }else {
+            } else {
                 throw new ForBiddenException("Access denies");
             }
         } catch (ResponseStatusException e) {

@@ -47,42 +47,81 @@ public class TaskV3Controller {
     @GetMapping("")
     public ResponseEntity<Object> getAllTask(
             @PathVariable String boardId,
-            @RequestParam(required = false) Set<String> filterStatuses) {
+            @RequestParam(required = false) Set<String> filterStatuses,
+            @RequestHeader(value = "Authorization", required = false) String token) {
 
         if (!boardService.existsById(boardId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board not found"));
         }
 
-        List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses, boardId);
-        List<SimpleTaskV3DTO> simpleTaskV3DTOs = tasks.stream()
-                .map(task -> modelMapper.map(task, SimpleTaskV3DTO.class))
-                .collect(Collectors.toList());
+        Board board = boardService.getBoardByBoardId(boardId);
+        boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
 
-        return ResponseEntity.ok(simpleTaskV3DTOs);
+        if (token == null || token.isEmpty()) {
+            if (isPublic) {
+                List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses, boardId);
+                List<SimpleTaskV3DTO> simpleTaskV3DTOs = tasks.stream()
+                        .map(task -> modelMapper.map(task, SimpleTaskV3DTO.class))
+                        .collect(Collectors.toList());
+
+                return ResponseEntity.ok(simpleTaskV3DTOs);
+            } else {
+                throw new ForBiddenException("Access denies");
+            }
+        }
+
+        String afterSubToken = token.substring(7);
+        String oid = jwtService.getOidFromToken(afterSubToken);
+        boolean isOwner = board.getOwner().getOid().equals(oid);
+
+        if (isOwner || isPublic) {
+            List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses, boardId);
+            List<SimpleTaskV3DTO> simpleTaskV3DTOs = tasks.stream()
+                    .map(task -> modelMapper.map(task, SimpleTaskV3DTO.class))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(simpleTaskV3DTOs);
+        } else {
+            throw new ForBiddenException("Access denies");
+        }
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getTaskById(
             @PathVariable String boardId,
             @PathVariable Integer id,
-            @RequestHeader("Authorization") String token
+            @RequestHeader(value = "Authorization", required = false) String token
     ) {
+        if (!boardService.existsById(boardId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "Board not found"));
+        }
+
+        if (token == null || token.isEmpty()) {
+            // Assuming public boards allow access without authentication
+            Board board = boardService.getBoardByBoardId(boardId);
+            if (board.getVisibility().toString().equalsIgnoreCase("public")) {
+                TaskV3 task = taskV3Service.getTaskById(id, boardId);
+                return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Access denied"));
+            }
+        }
+
         try {
             String afterSubToken = token.substring(7);
-
             String oid = jwtService.getOidFromToken(afterSubToken);
-
             Board board = boardService.getBoardByBoardId(boardId);
-            boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
             boolean isOwner = board.getOwner().getOid().equals(oid);
 
-            if (isOwner || isPublic){
+            if (isOwner) {
                 TaskV3 task = taskV3Service.getTaskById(id, boardId);
-
                 return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
-            }else {
-                throw new ForBiddenException("Access denies");
+            } else {
+                throw new ForBiddenException("Access denied");
             }
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
@@ -90,30 +129,34 @@ public class TaskV3Controller {
         }
     }
 
+
+
     @PostMapping("")
-    public ResponseEntity<?> addTask(@PathVariable String boardId, @RequestBody AddTaskDTO addTaskDTO ,@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> addTask(@PathVariable String boardId, @RequestBody(required = false) AddTaskDTO addTaskDTO ,@RequestHeader("Authorization") String token) {
         try {
             if (!boardService.existsById(boardId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Collections.singletonMap("error", "Board not found"));
             }
 
-            if (addTaskDTO.getTitle() != null) {
-                addTaskDTO.setTitle(addTaskDTO.getTitle().trim());
-            }
-            if (addTaskDTO.getDescription() != null) {
-                addTaskDTO.setDescription(addTaskDTO.getDescription().trim());
-            }
-            if (addTaskDTO.getAssignees() != null) {
-                addTaskDTO.setAssignees(addTaskDTO.getAssignees().trim());
-            }
+            if (addTaskDTO != null){
+                if (addTaskDTO.getTitle() != null) {
+                    addTaskDTO.setTitle(addTaskDTO.getTitle().trim());
+                }
+                if (addTaskDTO.getDescription() != null) {
+                    addTaskDTO.setDescription(addTaskDTO.getDescription().trim());
+                }
+                if (addTaskDTO.getAssignees() != null) {
+                    addTaskDTO.setAssignees(addTaskDTO.getAssignees().trim());
+                }
 
-            if (addTaskDTO.getDescription() != null && addTaskDTO.getDescription().isEmpty()) {
-                addTaskDTO.setDescription(null);
-            }
+                if (addTaskDTO.getDescription() != null && addTaskDTO.getDescription().isEmpty()) {
+                    addTaskDTO.setDescription(null);
+                }
 
-            if (addTaskDTO.getAssignees() != null && addTaskDTO.getAssignees().isEmpty()) {
-                addTaskDTO.setAssignees(null);
+                if (addTaskDTO.getAssignees() != null && addTaskDTO.getAssignees().isEmpty()) {
+                    addTaskDTO.setAssignees(null);
+                }
             }
 
             String afterSubToken = token.substring(7);
@@ -168,21 +211,22 @@ public class TaskV3Controller {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTask(@PathVariable String boardId, @PathVariable Integer id, @RequestBody AddTaskDTO addTaskDTO,@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> updateTask(@PathVariable String boardId, @PathVariable Integer id, @RequestBody(required = false) AddTaskDTO addTaskDTO,@RequestHeader("Authorization") String token) {
         try {
             if (!boardService.existsById(boardId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Collections.singletonMap("error", "Board not found"));
             }
-
-            if (addTaskDTO.getTitle() != null) {
-                addTaskDTO.setTitle(addTaskDTO.getTitle().trim());
-            }
-            if (addTaskDTO.getDescription() != null) {
-                addTaskDTO.setDescription(addTaskDTO.getDescription().isEmpty() ? null : addTaskDTO.getDescription().trim());
-            }
-            if (addTaskDTO.getAssignees() != null) {
-                addTaskDTO.setAssignees(addTaskDTO.getAssignees().isEmpty() ? null : addTaskDTO.getAssignees().trim());
+            if (addTaskDTO != null){
+                if (addTaskDTO.getTitle() != null) {
+                    addTaskDTO.setTitle(addTaskDTO.getTitle().trim());
+                }
+                if (addTaskDTO.getDescription() != null) {
+                    addTaskDTO.setDescription(addTaskDTO.getDescription().isEmpty() ? null : addTaskDTO.getDescription().trim());
+                }
+                if (addTaskDTO.getAssignees() != null) {
+                    addTaskDTO.setAssignees(addTaskDTO.getAssignees().isEmpty() ? null : addTaskDTO.getAssignees().trim());
+                }
             }
 
             String afterSubToken = token.substring(7);

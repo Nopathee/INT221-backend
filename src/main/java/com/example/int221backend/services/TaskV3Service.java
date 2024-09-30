@@ -5,6 +5,7 @@ import com.example.int221backend.dtos.AddTaskV2DTO;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
 import com.example.int221backend.entities.local.TaskV3; // เปลี่ยนเป็น TaskV3
+import com.example.int221backend.exception.BadRequestException;
 import com.example.int221backend.exception.ItemNotFoundException;
 import com.example.int221backend.repositories.local.BoardRepository;
 import com.example.int221backend.repositories.local.StatusRepository;
@@ -137,10 +138,10 @@ public class TaskV3Service {
         final Integer finalStatusId = statusId == null ? 1 : statusId;
 
         Status status = statusRepository.findById(finalStatusId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status ID " + finalStatusId + " Does Not EXIST!!!"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"Status not found"));
 
         TaskV3 existingTask = taskV3Repository.findById(taskId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID " + taskId + " DOES NOT EXIST!!!"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Task not found"));
 
         if (!existingTask.getBoard().getBoardId().equals(boardId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found in the specified board.");

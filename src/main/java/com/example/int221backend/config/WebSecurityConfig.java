@@ -2,9 +2,12 @@ package com.example.int221backend.config;
 
 import com.example.int221backend.Filters.JwtAuthFilter;
 import com.example.int221backend.services.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -34,8 +37,9 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/login", "/decode-token").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v3/**").permitAll()
                         .requestMatchers("/v2/**").authenticated()
-                        .requestMatchers("v3/**").authenticated()
+                        .requestMatchers("/v3/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

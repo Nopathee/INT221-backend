@@ -37,7 +37,7 @@ public class BoardService {
             throw new BadRequestException("boardName is null, empty");
         }
 
-        if (newBoard.getVisibility() == null){
+        if (newBoard.getVisibility() == null || newBoard.getVisibility().toString().isEmpty()){
             newBoard.setVisibility(BoardVisi.PRIVATE);
         } else if (newBoard.getVisibility() != null &&
                 ("private".equalsIgnoreCase(newBoard.getVisibility().toString()) ||
