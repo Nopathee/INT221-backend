@@ -10,4 +10,5 @@ import lombok.Setter;
 public class BoardIdDTO {
     private String id;
     private String boardName;
+    private String visibility;
 }
