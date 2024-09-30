@@ -152,7 +152,7 @@ public class BoardController {
 
     @PatchMapping("/{boardId}")
     public ResponseEntity<?> editVisibilityBoard(@RequestHeader("Authorization") String token,
-                                                 @RequestParam String boardId,
+                                                 @PathVariable String boardId,
                                                  @RequestBody Map<String,String> body){
         String visibility = body.get("visibility");
 
@@ -184,7 +184,7 @@ public class BoardController {
 
         boardRepository.save(board);
 
-        return ResponseEntity.ok(visibility);
+        return ResponseEntity.ok(board);
     }
 }
 
