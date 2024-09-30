@@ -99,7 +99,7 @@ public class StatusV3Controller {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board not found"));
         }
-
+        try {
         if (token == null || token.isEmpty()) {
             // Assuming public boards allow access without authentication
             Board board = boardService.getBoardByBoardId(boardId);
@@ -112,7 +112,7 @@ public class StatusV3Controller {
             }
         }
 
-        try {
+
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
 
@@ -140,16 +140,22 @@ public class StatusV3Controller {
                     .body(Collections.singletonMap("error", "Board not found"));
         }
 
-        if (statusDTO == null || statusDTO.getName() == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Collections.singletonMap("error", "Access denied, request body required"));
-        }
-
         try {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
             Board board = boardService.getBoardByBoardId(boardId);
             boolean isOwner = board.getOwner().getOid().equals(oid);
+
+            if (statusDTO == null || statusDTO.getName() == null) {
+                if (isOwner){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Collections.singletonMap("error", "Access denied, request body required"));
+                }else {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Collections.singletonMap("error", "Access denied, request body required"));
+                }
+
+            }
 
             if (!isOwner) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -173,17 +179,22 @@ public class StatusV3Controller {
         }
 
         // Check if the request body is null or empty
-        if (statusDTO == null || statusDTO.getName() == null) { // Add your own validation logic for required fields
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Collections.singletonMap("error", "Access denied, request body required"));
-        }
+
 
         try {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
             Board board = boardService.getBoardByBoardId(boardId);
             boolean isOwner = board.getOwner().getOid().equals(oid);
-
+            if (statusDTO == null || statusDTO.getName() == null) {
+                if (isOwner){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Collections.singletonMap("error", "Access denied, request body required"));
+                }else {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Collections.singletonMap("error", "Access denied, request body required"));
+                }
+            }
             if (!isOwner) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Collections.singletonMap("error", "Access denied to private board"));

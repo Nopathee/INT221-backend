@@ -99,25 +99,27 @@ public class TaskV3Controller {
                     .body(Collections.singletonMap("error", "Board not found"));
         }
 
-        if (token == null || token.isEmpty()) {
-            // Assuming public boards allow access without authentication
-            Board board = boardService.getBoardByBoardId(boardId);
-            if (board.getVisibility().toString().equalsIgnoreCase("public")) {
-                TaskV3 task = taskV3Service.getTaskById(id, boardId);
-                return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Collections.singletonMap("error", "Access denied"));
-            }
-        }
+        Board board = boardService.getBoardByBoardId(boardId);
+        boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
 
         try {
+            if (token == null || token.isEmpty()) {
+                // Allow access if the board is public
+                if (isPublic) {
+                    TaskV3 task = taskV3Service.getTaskById(id, boardId);
+                    return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
+                } else {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Collections.singletonMap("error", "Access denied"));
+                }
+            }
+
+            // Handle token authentication
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
-            Board board = boardService.getBoardByBoardId(boardId);
             boolean isOwner = board.getOwner().getOid().equals(oid);
 
-            if (isOwner) {
+            if (isOwner || isPublic) { // Allow owner or public access
                 TaskV3 task = taskV3Service.getTaskById(id, boardId);
                 return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
             } else {
@@ -165,7 +167,15 @@ public class TaskV3Controller {
 
             Board board = boardService.getBoardByBoardId(boardId);
             boolean isOwner = board.getOwner().getOid().equals(oid);
-
+            if (addTaskDTO == null){
+                if (isOwner){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Collections.singletonMap("error", "Access denied, request body required"));
+                }else {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Collections.singletonMap("error", "Access denied, request body required"));
+                }
+            }
             if (isOwner){
                 Integer statusId = addTaskDTO.getStatus();
                 AddTaskV2DTO newTask = taskV3Service.addTask(addTaskDTO, statusId, boardId);
@@ -235,7 +245,15 @@ public class TaskV3Controller {
 
             Board board = boardService.getBoardByBoardId(boardId);
             boolean isOwner = board.getOwner().getOid().equals(oid);
-
+            if (addTaskDTO == null){
+                if (isOwner){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Collections.singletonMap("error", "Access denied, request body required"));
+                }else {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(Collections.singletonMap("error", "Access denied, request body required"));
+                }
+            }
             if (isOwner){
                 Integer status = addTaskDTO.getStatus();
                 TaskV3 editedTask = modelMapper.map(addTaskDTO, TaskV3.class);

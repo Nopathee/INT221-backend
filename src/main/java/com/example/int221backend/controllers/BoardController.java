@@ -190,9 +190,12 @@ public class BoardController {
     @PatchMapping("/{boardId}")
     public ResponseEntity<?> editVisibilityBoard(@RequestHeader("Authorization") String token,
                                                  @PathVariable String boardId,
-                                                 @RequestBody Map<String,String> body){
-        String visibility = body.get("visibility");
-
+                                                 @RequestBody(required = false) Map<String, String> body) {
+        if (!boardService.existsById(boardId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", "Board not found"));
+        }
+        
         if (token == null || token.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("error", "The access token has expired or is invalid"));
@@ -206,16 +209,24 @@ public class BoardController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("error", "Invalid token"));
         }
-
         Board board = boardService.getBoardByBoardId(boardId);
-
-        if (!visibility.equalsIgnoreCase("public") && !visibility.equalsIgnoreCase("private")){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Collections.singletonMap("error", "visibility should be private or public"));
+        if (body == null || !body.containsKey("visibility")){
+            if (board.getOwner().getOid().equals(oid)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Collections.singletonMap("error", "Visibility must be provided"));
+            }else{
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Visibility must be provided"));
+            }
         }
 
-        board.setVisibility(BoardVisi.valueOf(visibility.toUpperCase()));
+        String visibility = body.get("visibility");
 
+        if (!visibility.equalsIgnoreCase("public") && !visibility.equalsIgnoreCase("private")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", "Visibility should be private or public"));
+        }
+        board.setVisibility(BoardVisi.valueOf(visibility.toUpperCase()));
         boardRepository.save(board);
 
         return ResponseEntity.ok(board);
