@@ -166,9 +166,15 @@ public class BoardController {
                         .body(Collections.singletonMap("error", "The access token has expired or is invalid"));
             }
 
+
             if (addBoardDTO == null){
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Collections.singletonMap("error", "Access denied, request body required"));
+            }
+
+            if (addBoardDTO.getName().length() > 120){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Collections.singletonMap("error", "board name is longer than limit"));
             }
 
             String afterSubToken = token.substring(7);

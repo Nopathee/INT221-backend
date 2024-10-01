@@ -3,9 +3,13 @@ package com.example.int221backend.entities.local;
 import com.example.int221backend.entities.BoardVisi;
 import com.example.int221backend.entities.shared.User;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import io.viascom.nanoid.NanoId;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.security.SecureRandom;
 
 @Getter
@@ -20,7 +24,7 @@ public class Board {
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
     private UserLocal owner;
-
+    
     @Column(name = "board_name", nullable = false, length = 100)
     private String name;
 

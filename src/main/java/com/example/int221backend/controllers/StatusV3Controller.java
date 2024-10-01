@@ -214,7 +214,6 @@ public class StatusV3Controller {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board or Status not found"));
         }
-
         try {
 
             String afterSubToken = token.substring(7);
