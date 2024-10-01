@@ -160,31 +160,41 @@ public class BoardController {
     public ResponseEntity<?> createBoard(
             @RequestHeader("Authorization") String token,
             @RequestBody(required = false) AddBoardDTO addBoardDTO) {
+        try{
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "The access token has expired or is invalid"));
+            }
 
-        if (token == null || token.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Collections.singletonMap("error", "The access token has expired or is invalid"));
+            if (addBoardDTO == null){
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Access denied, request body required"));
+            }
+
+            String afterSubToken = token.substring(7);
+            String oid;
+            try {
+                oid = jwtService.getOidFromToken(afterSubToken);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "Invalid token"));
+            }
+
+
+            Board newBoard = new Board();
+            newBoard.setName(addBoardDTO.getName());
+            UserLocal owner = userService.findByOid(oid);
+            newBoard.setOwner(owner);
+
+            Board createdBoard = boardService.addBoard(newBoard);
+            AddBoardDTO createdBoardDTO = modelMapper.map(createdBoard, AddBoardDTO.class);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdBoardDTO);
+        }catch (ResponseStatusException e){
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(Collections.singletonMap("error", e.getReason()));
         }
 
-        String afterSubToken = token.substring(7);
-        String oid;
-        try {
-            oid = jwtService.getOidFromToken(afterSubToken);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Collections.singletonMap("error", "Invalid token"));
-        }
-
-
-        Board newBoard = new Board();
-        newBoard.setName(addBoardDTO.getName());
-        UserLocal owner = userService.findByOid(oid);
-        newBoard.setOwner(owner);
-
-        Board createdBoard = boardService.addBoard(newBoard);
-        AddBoardDTO createdBoardDTO = modelMapper.map(createdBoard, AddBoardDTO.class);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdBoardDTO);
     }
 
     @PatchMapping("/{boardId}")

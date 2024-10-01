@@ -37,6 +37,10 @@ public class BoardService {
             throw new BadRequestException("boardName is null, empty");
         }
 
+        if (newBoard.getName().length() > 120){
+            throw new BadRequestException("boardName is longer than limit");
+        }
+
         if (newBoard.getVisibility() == null || newBoard.getVisibility().toString().isEmpty()){
             newBoard.setVisibility(BoardVisi.PRIVATE);
         } else if (newBoard.getVisibility() != null &&
