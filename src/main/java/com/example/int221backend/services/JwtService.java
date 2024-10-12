@@ -25,6 +25,9 @@ public class JwtService implements Serializable {
     @Value("#{60*30*1000}")
     private long JWT_TOKEN_VALIDITY;
 
+    @Value("#{24*60*60*1000}")
+    private long JWT_REFRESH_TOKEN_VALIDITY;
+
     // Extract username from token
     public String getUsernameFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
@@ -70,6 +73,27 @@ public class JwtService implements Serializable {
         claims.put("email", userInfo.getEmail());
         claims.put("role", userInfo.getRole());
         return doGenerateToken(claims, userInfo.getUsername());
+    }
+
+    public String generateRefreshToken(User userInfo){
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("name", userInfo.getName());
+        claims.put("oid", userInfo.getOid());
+        claims.put("email", userInfo.getEmail());
+        claims.put("role", userInfo.getRole());
+        return doGenerateRefreshToken(claims, userInfo.getUsername());
+    }
+
+    public String doGenerateRefreshToken(Map<String, Object> claims, String subject ){
+        return Jwts.builder()
+                .setHeaderParam("typ","JWT")
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuer("https://intproj23.sit.kmutt.ac.th/ssi3/")
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_REFRESH_TOKEN_VALIDITY))
+                .signWith(signatureAlgorithm, SECRET_KEY)
+                .compact();
     }
 
     // Create the token with claims and subject

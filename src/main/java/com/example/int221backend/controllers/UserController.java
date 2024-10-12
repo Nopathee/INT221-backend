@@ -52,7 +52,8 @@ public class UserController {
 
             UserDetails userDetails = userService.loadUserByUsername(jwtRequestUser.getUserName());
             String token = jwtService.generateToken(userRepository.findByUsername(userDetails.getUsername()));
-            AuthResponseDTO authResponse = new AuthResponseDTO(token);
+            String refreshToken = jwtService.generateRefreshToken(userRepository.findByUsername(userDetails.getUsername()));
+            AuthResponseDTO authResponse = new AuthResponseDTO(token,refreshToken);
 
             return ResponseEntity.ok(authResponse);
 
