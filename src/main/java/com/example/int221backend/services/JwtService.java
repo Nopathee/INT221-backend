@@ -68,11 +68,12 @@ public class JwtService implements Serializable {
     // Generate a new token
     public String generateToken(User userInfo) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", userInfo.getUsername());
         claims.put("name", userInfo.getName());
         claims.put("oid", userInfo.getOid());
         claims.put("email", userInfo.getEmail());
         claims.put("role", userInfo.getRole());
-        return doGenerateToken(claims, userInfo.getUsername());
+        return doGenerateToken(claims);
     }
 
     public String generateRefreshToken(User userInfo){
