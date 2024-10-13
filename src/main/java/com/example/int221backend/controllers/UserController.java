@@ -67,9 +67,9 @@ public class UserController {
     }
 
     @PostMapping("/token")
-    public ResponseEntity<Object> refreshToken(@RequestHeader("x-refresh-token") String refreshToken){
+    public ResponseEntity<Object> refreshToken(@RequestHeader("Authorization") String token){
         try {
-            Claims claims = jwtService.getAllClaimsFromToken(refreshToken);
+            Claims claims = jwtService.getAllClaimsFromToken(token);
             String accessToken = jwtService.generateTokenWithClaims(claims);
 
             Map<String, Object> responseBody = new HashMap<>();
