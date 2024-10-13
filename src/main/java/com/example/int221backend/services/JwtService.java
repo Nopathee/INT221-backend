@@ -97,11 +97,11 @@ public class JwtService implements Serializable {
     }
 
     // Create the token with claims and subject
-    private String doGenerateToken(Map<String, Object> claims, String subject) {
+    private String doGenerateToken(Map<String, Object> claims) {
         return Jwts.builder()
                 .setHeaderParam("typ", "JWT")
                 .setClaims(claims)
-                .setSubject(subject)
+//                .setSubject(subject)
                 .setIssuer("https://intproj23.sit.kmutt.ac.th/ssi3/")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
@@ -113,6 +113,15 @@ public class JwtService implements Serializable {
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    public String generateTokenWithClaims(Claims claims) {
+        Map<String, Object> tokenClaims = new HashMap<>();
+        tokenClaims.put("sub", claims.getSubject());
+        tokenClaims.put("oid", claims.get("oid"));
+        tokenClaims.put("iss", claims.getIssuer());
+        tokenClaims.put("email", claims.get("email"));
+        return doGenerateToken(tokenClaims);
     }
 
 }

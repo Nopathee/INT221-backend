@@ -2,10 +2,12 @@ package com.example.int221backend.controllers;
 
 import com.example.int221backend.dtos.AuthResponseDTO;
 import com.example.int221backend.dtos.LoginUserDTO;
+import com.example.int221backend.exception.NotCreatedException;
 import com.example.int221backend.repositories.shared.UserRepository;
 import com.example.int221backend.services.JwtService;
 import com.example.int221backend.services.UserService;
 import com.example.int221backend.entities.shared.User;
+import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +19,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = {"http://localhost:5173","http://ip23ssi3.sit.kmutt.ac.th","http://intproj23.sit.kmutt.ac.th"})
 @RestController
@@ -59,6 +63,21 @@ public class UserController {
 
         } catch (BadCredentialsException ex) {
             throw new BadCredentialsException ("User Password is incorrect !");
+        }
+    }
+
+    @PostMapping("/token")
+    public ResponseEntity<Object> refreshToken(@RequestHeader("x-refresh-token") String refreshToken){
+        try {
+            Claims claims = jwtService.getAllClaimsFromToken(refreshToken);
+            String accessToken = jwtService.generateTokenWithClaims(claims);
+
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("access_token", accessToken);
+
+            return ResponseEntity.ok(responseBody);
+        } catch (Exception e) {
+            throw new NotCreatedException("Refresh token failed!");
         }
     }
 
