@@ -9,6 +9,7 @@ import com.example.int221backend.entities.local.UserLocal;
 import com.example.int221backend.exception.BadRequestException;
 import com.example.int221backend.exception.ForBiddenException;
 import com.example.int221backend.repositories.local.BoardRepository;
+import com.example.int221backend.services.CollabService;
 import com.example.int221backend.services.UserService;
 import com.example.int221backend.services.BoardService;
 import com.example.int221backend.services.JwtService;
@@ -41,6 +42,9 @@ public class BoardController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private CollabService collabService;
 
     @Autowired
     private BoardRepository boardRepository;
@@ -84,9 +88,11 @@ public class BoardController {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
             boolean isOwner = board.getOwner().getOid().equals(oid);
+            boolean isCollab = collabService.isCollaborator(oid,boardId);
+
 
             // Check if the user is not the owner of the private board
-            if (!isOwner && !isPublic) {
+            if (!isOwner && !isPublic && !isCollab) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Collections.singletonMap("error", "Access denied to private board"));
             }
@@ -116,6 +122,7 @@ public class BoardController {
             String oid = jwtService.getOidFromToken(afterSubToken);
 
             List<Board> boards = boardService.getAllBoard(oid);
+
             List<BoardIdDTO> boardIdDTOS = boards.stream()
                     .map(board -> modelMapper.map(board, BoardIdDTO.class))
                     .collect(Collectors.toList());
@@ -124,37 +131,6 @@ public class BoardController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve boards");
         }
     }
-
-
-//    @PostMapping("")
-//    public ResponseEntity<?> createBoard(
-//            @RequestHeader("Authorization") String token,
-//            @RequestBody(required = false) AddBoardDTO addBoardDTO) {
-//
-//        if (token == null) {
-//            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("the access token has expired or is invalid");
-//        }
-//
-//        if (addBoardDTO == null || addBoardDTO.getName() == null || addBoardDTO.getName().isEmpty()) {
-//            throw new BadRequestException("boardName is null, empty");
-//        }
-//
-//        if (addBoardDTO.getName().length() > MAX_LENGTH) {
-//            throw new BadRequestException("boardName length > MAX-LENGTH");
-//        }
-//
-//
-//        String afterSubToken = token.substring(7);
-//        String oid = jwtService.getOidFromToken(afterSubToken);
-//        Board newBoard = new Board();
-//        newBoard.setName(addBoardDTO.getName());
-//        UserLocal owner = userService.findByOid(oid);
-//        newBoard.setOwner(owner);
-//        Board createdBoard = boardService.addBoard(newBoard);
-//        AddBoardDTO createdBoardDTO = modelMapper.map(createdBoard, AddBoardDTO.class);
-//
-//        return ResponseEntity.status(HttpStatus.CREATED).body(createdBoardDTO);
-//    }
 
     @PostMapping("")
     public ResponseEntity<?> createBoard(

@@ -10,4 +10,8 @@ public interface CollabRepository extends JpaRepository<Collaborators,Integer> {
 
     Collaborators findByUser_EmailAndBoard_BoardId(String email, String boardId);
     Collaborators findByUser_OidAndBoard_BoardId(String oid , String boardId);
+
+    List<Collaborators> findByUser_Oid(String oid);
+
+
 }
