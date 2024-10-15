@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserLocalRepository extends JpaRepository<UserLocal,String> {
     UserLocal findByOid(String oid);
+
+    UserLocal findByEmail(String email);
 }

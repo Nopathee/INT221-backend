@@ -8,10 +8,7 @@ import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
 import com.example.int221backend.entities.local.TaskV3;
 import com.example.int221backend.exception.ForBiddenException;
-import com.example.int221backend.services.BoardService;
-import com.example.int221backend.services.JwtService;
-import com.example.int221backend.services.StatusV3Service;
-import com.example.int221backend.services.TaskV3Service;
+import com.example.int221backend.services.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://ip23ssi3.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://ip23ssi3.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th","https://intproj23.sit.kmutt.ac.th"})
 @RestController
 @RequestMapping("v3/boards/{boardId}/tasks")
 public class TaskV3Controller {
@@ -43,6 +40,9 @@ public class TaskV3Controller {
 
     @Autowired
     private BoardService boardService;
+
+    @Autowired
+    private CollabService collabService;
 
     @GetMapping("")
     public ResponseEntity<Object> getAllTask(
@@ -74,8 +74,9 @@ public class TaskV3Controller {
         String afterSubToken = token.substring(7);
         String oid = jwtService.getOidFromToken(afterSubToken);
         boolean isOwner = board.getOwner().getOid().equals(oid);
+        boolean isCollab = collabService.isCollaborator(oid,boardId);
 
-        if (isOwner || isPublic) {
+        if (isOwner || isPublic || isCollab) {
             List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses, boardId);
             List<SimpleTaskV3DTO> simpleTaskV3DTOs = tasks.stream()
                     .map(task -> modelMapper.map(task, SimpleTaskV3DTO.class))
@@ -118,8 +119,10 @@ public class TaskV3Controller {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
             boolean isOwner = board.getOwner().getOid().equals(oid);
+            boolean isCollab = collabService.isCollaborator(oid,boardId);
 
-            if (isOwner || isPublic) { // Allow owner or public access
+
+            if (isOwner || isPublic || isCollab) { // Allow owner or public access
                 TaskV3 task = taskV3Service.getTaskById(id, boardId);
                 return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
             } else {

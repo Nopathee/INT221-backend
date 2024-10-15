@@ -6,6 +6,7 @@ import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
 import com.example.int221backend.exception.ForBiddenException;
 import com.example.int221backend.services.BoardService;
+import com.example.int221backend.services.CollabService;
 import com.example.int221backend.services.JwtService;
 import com.example.int221backend.services.StatusV3Service;
 import org.modelmapper.ModelMapper;
@@ -19,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://ip23ssi3.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://ip23ssi3.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th","https://intproj23.sit.kmutt.ac.th"})
 @RestController
 @RequestMapping("v3/boards/{boardId}/statuses")
 public class StatusV3Controller {
@@ -35,6 +36,9 @@ public class StatusV3Controller {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private CollabService collabService;
 
     @GetMapping("")
     public ResponseEntity<Object> getAllStatuses(
@@ -68,9 +72,11 @@ public class StatusV3Controller {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
             boolean isOwner = board.getOwner().getOid().equals(oid);
+            boolean isCollab = collabService.isCollaborator(oid,boardId);
+
 
             // Check if the user is not the owner of the private board
-            if (!isOwner && !isPublic) {
+            if (!isOwner && !isPublic && !isCollab) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Collections.singletonMap("error", "Access denied to private board"));
             }
@@ -119,8 +125,10 @@ public class StatusV3Controller {
             Board board = boardService.getBoardByBoardId(boardId);
             boolean isOwner = board.getOwner().getOid().equals(oid);
             boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
+            boolean isCollab = collabService.isCollaborator(oid,boardId);
 
-            if (isOwner || isPublic) {
+
+            if (isOwner || isPublic || isCollab) {
                 Status status = statusService.getStatusById(statusId, boardId);
                 return ResponseEntity.ok(modelMapper.map(status, AddStatusDTO.class));
             } else {

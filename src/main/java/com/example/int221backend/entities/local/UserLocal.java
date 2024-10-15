@@ -30,6 +30,7 @@ public class UserLocal {
     @Column(name = "email", nullable = false, length = 50)
     private String email;
 
+
     @NotNull
     @ColumnDefault("'STUDENT'")
     @Lob
