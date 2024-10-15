@@ -3,8 +3,10 @@ package com.example.int221backend.controllers;
 import com.example.int221backend.dtos.AddBoardDTO;
 import com.example.int221backend.dtos.AddStatusDTO;
 import com.example.int221backend.dtos.BoardIdDTO;
+import com.example.int221backend.dtos.BoardResponseDTO;
 import com.example.int221backend.entities.BoardVisi;
 import com.example.int221backend.entities.local.Board;
+import com.example.int221backend.entities.local.Collaborators;
 import com.example.int221backend.entities.local.UserLocal;
 import com.example.int221backend.exception.BadRequestException;
 import com.example.int221backend.exception.ForBiddenException;
@@ -21,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -109,28 +112,46 @@ public class BoardController {
 
 
     @GetMapping("")
-    public ResponseEntity<List<BoardIdDTO>> getAllBoard(
+    public ResponseEntity<BoardResponseDTO> getAllBoard(
             @RequestHeader(value = "Authorization", required = false) String token
     ) {
         if (token == null || token.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(null);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
 
         try {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
 
-            List<Board> boards = boardService.getAllBoard(oid);
+            // Fetch personal boards
+            List<Board> personalBoards = boardService.getAllBoard(oid);
 
-            List<BoardIdDTO> boardIdDTOS = boards.stream()
+            // Fetch collaborator boards
+            List<Collaborators> collaborators = collabService.getCollabsByOnlyOid(oid);
+            List<Board> collaboratorBoards = new ArrayList<>();
+
+            for (Collaborators collaborator : collaborators) {
+                Board board = boardService.getBoardByBoardId(collaborator.getBoard().getBoardId());
+                collaboratorBoards.add(board);
+            }
+
+            // Map boards to DTOs
+            List<BoardIdDTO> personalBoardDTOs = personalBoards.stream()
                     .map(board -> modelMapper.map(board, BoardIdDTO.class))
                     .collect(Collectors.toList());
-            return ResponseEntity.ok(boardIdDTOS);
+
+            List<BoardIdDTO> collaboratorBoardDTOs = collaboratorBoards.stream()
+                    .map(board -> modelMapper.map(board, BoardIdDTO.class))
+                    .collect(Collectors.toList());
+
+            // Create response object
+            BoardResponseDTO response = new BoardResponseDTO(personalBoardDTOs, collaboratorBoardDTOs);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve boards");
         }
     }
+
 
     @PostMapping("")
     public ResponseEntity<?> createBoard(

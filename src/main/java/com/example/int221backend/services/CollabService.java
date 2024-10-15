@@ -98,7 +98,9 @@ public class CollabService {
         return showCollabDTO;
     }
 
-
+    public List<Collaborators> getCollabsByOnlyOid(String oid){
+        return collabRepository.findByUser_Oid(oid);
+    }
 
 
 }

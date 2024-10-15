@@ -138,7 +138,7 @@ public class CollabController {
         }
 
         // Add the collaborator
-        ShowCollabDTO newCollaborator = collabService.addCollaborator(boardId, addCollaboratorDTO.getEmail(), addCollaboratorDTO.getAccess_right());
+        ShowCollabDTO newCollaborator = collabService.addCollaborator(boardId, addCollaboratorDTO.getEmail(), addCollaboratorDTO.getAccessRight());
         return ResponseEntity.status(HttpStatus.CREATED).body(newCollaborator);
     }
 

@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 public class AddCollaboratorDTO {
     private String email;
-    private AccessRight access_right;
+    private AccessRight accessRight;
 }
