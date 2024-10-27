@@ -5,10 +5,12 @@ import com.example.int221backend.entities.AccessRight;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Collaborators;
 import com.example.int221backend.entities.local.UserLocal;
+import com.example.int221backend.entities.shared.User;
 import com.example.int221backend.exception.ItemNotFoundException;
 import com.example.int221backend.repositories.local.BoardRepository;
 import com.example.int221backend.repositories.local.CollabRepository;
 import com.example.int221backend.repositories.local.UserLocalRepository;
+import com.example.int221backend.repositories.shared.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,9 @@ public class CollabService {
 
     @Autowired
     private UserLocalRepository userLocalRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -74,26 +79,28 @@ public class CollabService {
         if (existingCollaborator != null) {
             throw new ItemNotFoundException("Collaborator already exists");
         }
-
+        System.out.println(email);
         // Find the user by email
-        UserLocal user = userLocalRepository.findByEmail(email);
-        if (user == null) {
+
+        UserLocal userLocal = userLocalRepository.findByEmail(email);
+        if (userLocal == null){
             throw new ItemNotFoundException("User not found");
         }
 
         // Create and save the new collaborator
         Collaborators newCollaborator = new Collaborators();
-        newCollaborator.setUser(user);
+        newCollaborator.setUser(userLocal);
         newCollaborator.setBoard(boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found")));
         newCollaborator.setAccessRight(access_right);
 
-        collabRepository.save(newCollaborator);
+
+
 
         // Map to DTO
         ShowCollabDTO showCollabDTO = modelMapper.map(newCollaborator, ShowCollabDTO.class);
-        showCollabDTO.setOid(user.getOid());
-        showCollabDTO.setName(user.getName());
-        showCollabDTO.setEmail(user.getEmail());
+        showCollabDTO.setOid(userLocal.getOid());
+        showCollabDTO.setName(userLocal.getName());
+        showCollabDTO.setEmail(userLocal.getEmail());
         showCollabDTO.setAccess_right(access_right);
         return showCollabDTO;
     }

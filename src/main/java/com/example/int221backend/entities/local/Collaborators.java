@@ -30,7 +30,7 @@ public class Collaborators {
     @Column(name = "access_right", nullable = false)
     private AccessRight accessRight;
 
-    @Column(name = "added_on" )
+    @Column(name = "added_on",insertable = false )
     private ZonedDateTime addedOn;
 
 }
