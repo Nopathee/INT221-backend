@@ -1,12 +1,16 @@
 package com.example.int221backend.services;
 
 import com.example.int221backend.dtos.AddBoardDTO;
+import com.example.int221backend.dtos.BoardDTO;
+import com.example.int221backend.entities.AccessRight;
 import com.example.int221backend.entities.BoardVisi;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Collaborators;
+import com.example.int221backend.entities.local.UserLocal;
 import com.example.int221backend.exception.BadRequestException;
 import com.example.int221backend.repositories.local.BoardRepository;
 import com.example.int221backend.repositories.local.CollabRepository;
+import com.example.int221backend.repositories.local.UserLocalRepository;
 import com.example.int221backend.repositories.shared.UserRepository;
 import org.bouncycastle.math.raw.Mod;
 import org.modelmapper.ModelMapper;
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class BoardService {
@@ -32,18 +37,41 @@ public class BoardService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public List<Board> getAllBoard(String oid){
-        List<Board> boards = boardRepository.findByOwner_Oid(oid);
-        List<Collaborators> collaborators = collabRepository.findByUser_Oid(oid);
+    @Autowired
+    private UserLocalRepository userLocalRepository;
 
-        Set<Board> allBoards = new HashSet<>(boards);
+    @Autowired
+    private JwtService jwtService;
 
-        for (Collaborators collaborator : collaborators) {
-            Board board = collaborator.getBoard();
-            allBoards.add(board);
+    public List<BoardDTO> getAllBoard(String token) {
+        if (token == null) {
+            return boardRepository.findByVisibility(BoardVisi.PUBLIC)
+                    .stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
         }
 
-        return new ArrayList<>(allBoards);
+        String userOid = jwtService.getOidFromToken(token);
+        UserLocal user = userLocalRepository.findById(userOid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        Set<Board> userBoards = new HashSet<>(boardRepository.findByOwner(user));
+        Set<Board> publicBoards = new HashSet<>(boardRepository.findByVisibility(BoardVisi.PUBLIC));
+        Set<Board> collaborationBoards = collabRepository.findByUser(user)
+                .stream()
+                .filter(collab -> collab.getAccessRight() == AccessRight.WRITE
+                        || collab.getAccessRight() == AccessRight.READ)
+                .map(Collaborators::getBoard)
+                .collect(Collectors.toSet());
+
+        Set<Board> allBoards = new HashSet<>();
+        allBoards.addAll(userBoards);
+        allBoards.addAll(publicBoards);
+        allBoards.addAll(collaborationBoards);
+
+        return allBoards.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     public Board addBoard(Board newBoard) {
@@ -77,5 +105,34 @@ public class BoardService {
     public boolean existsById(String boardId) {
         return boardRepository.existsById(boardId);
     }
+
+    private BoardDTO convertToDTO(Board board) {
+        BoardDTO dto = new BoardDTO();
+        dto.setId(board.getBoardId());
+        dto.setName(board.getName());
+        dto.setVisibility(board.getVisibility().toString().toLowerCase());
+
+        // Set owner information
+        BoardDTO.PMUserDTO ownerDTO = new BoardDTO.PMUserDTO();
+        ownerDTO.setOid(board.getOwner().getOid());
+        ownerDTO.setName(board.getOwner().getName());
+        dto.setOwner(ownerDTO);
+
+        // Get and set collaborators
+        List<Collaborators> collaborators = collabRepository.findByBoard(board);
+        List<BoardDTO.CollaboratorDTO> collaboratorDTOs = collaborators.stream()
+                .map(collab -> {
+                    BoardDTO.CollaboratorDTO collabDTO = new BoardDTO.CollaboratorDTO();
+                    collabDTO.setOid(collab.getUser().getOid());
+                    collabDTO.setName(collab.getUser().getName());
+                    collabDTO.setAccess_right(collab.getAccessRight().toString());
+                    return collabDTO;
+                })
+                .collect(Collectors.toList());
+        dto.setCollaborators(collaboratorDTOs);
+
+        return dto;
+    }
+
 
 }

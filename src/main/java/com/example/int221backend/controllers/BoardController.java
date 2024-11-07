@@ -1,9 +1,6 @@
 package com.example.int221backend.controllers;
 
-import com.example.int221backend.dtos.AddBoardDTO;
-import com.example.int221backend.dtos.AddStatusDTO;
-import com.example.int221backend.dtos.BoardIdDTO;
-import com.example.int221backend.dtos.BoardResponseDTO;
+import com.example.int221backend.dtos.*;
 import com.example.int221backend.entities.BoardVisi;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Collaborators;
@@ -112,43 +109,17 @@ public class BoardController {
 
 
     @GetMapping("")
-    public ResponseEntity<BoardResponseDTO> getAllBoard(
-            @RequestHeader(value = "Authorization", required = false) String token
-    ) {
-        if (token == null || token.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-        }
-
+    public ResponseEntity<?> getBoards(@RequestHeader(value = "Authorization", required = false) String token) {
         try {
-            String afterSubToken = token.substring(7);
-            String oid = jwtService.getOidFromToken(afterSubToken);
-
-            // Fetch personal boards
-            List<Board> personalBoards = boardService.getAllBoard(oid);
-
-            // Fetch collaborator boards
-            List<Collaborators> collaborators = collabService.getCollabsByOnlyOid(oid);
-            List<Board> collaboratorBoards = new ArrayList<>();
-
-            for (Collaborators collaborator : collaborators) {
-                Board board = boardService.getBoardByBoardId(collaborator.getBoard().getBoardId());
-                collaboratorBoards.add(board);
+            String jwtToken = token != null ? token.substring(7) : null;
+            List<BoardDTO> boardDTOs = boardService.getAllBoard(jwtToken);
+            if (boardDTOs.isEmpty()) {
+                return ResponseEntity.ok().build();
             }
-
-            // Map boards to DTOs
-            List<BoardIdDTO> personalBoardDTOs = personalBoards.stream()
-                    .map(board -> modelMapper.map(board, BoardIdDTO.class))
-                    .collect(Collectors.toList());
-
-            List<BoardIdDTO> collaboratorBoardDTOs = collaboratorBoards.stream()
-                    .map(board -> modelMapper.map(board, BoardIdDTO.class))
-                    .collect(Collectors.toList());
-
-            // Create response object
-            BoardResponseDTO response = new BoardResponseDTO(personalBoardDTOs, collaboratorBoardDTOs);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(boardDTOs);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve boards");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Unauthorized access"));
         }
     }
 

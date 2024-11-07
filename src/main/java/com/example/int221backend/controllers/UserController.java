@@ -67,8 +67,9 @@ public class UserController {
     }
 
     @PostMapping("/token")
-    public ResponseEntity<Object> refreshToken(@RequestHeader("Authorization") String token){
+    public ResponseEntity<Object> refreshToken(@RequestHeader("Authorization") String reToken){
         try {
+            String token = reToken.replace("Bearer ","");
             Claims claims = jwtService.getAllClaimsFromToken(token);
             String accessToken = jwtService.generateTokenWithClaims(claims);
 
@@ -77,6 +78,7 @@ public class UserController {
 
             return ResponseEntity.ok(responseBody);
         } catch (Exception e) {
+            System.out.println(e);
             throw new NotCreatedException("Refresh token failed!");
         }
     }

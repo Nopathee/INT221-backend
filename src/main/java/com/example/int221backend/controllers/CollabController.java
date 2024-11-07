@@ -1,11 +1,7 @@
 package com.example.int221backend.controllers;
 
-import com.example.int221backend.dtos.AddCollaboratorDTO;
 import com.example.int221backend.dtos.ShowCollabDTO;
-import com.example.int221backend.dtos.SimpleTaskV3DTO;
 import com.example.int221backend.entities.local.Board;
-import com.example.int221backend.entities.local.Collaborators;
-import com.example.int221backend.entities.local.TaskV3;
 import com.example.int221backend.exception.ForBiddenException;
 import com.example.int221backend.exception.ItemNotFoundException;
 import com.example.int221backend.services.BoardService;
@@ -15,9 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 @CrossOrigin(origins = {"http://localhost:5173", "http://ip23ssi3.sit.kmutt.ac.th", "http://intproj23.sit.kmutt.ac.th","https://intproj23.sit.kmutt.ac.th"})
 @RestController
@@ -116,7 +113,7 @@ public class CollabController {
     @PostMapping("")
     public ResponseEntity<Object> addCollaborator(
             @PathVariable String boardId,
-            @RequestBody AddCollaboratorDTO addCollaboratorDTO,
+            @RequestBody Map<String,String> req,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
         // Check if the board exists
@@ -137,8 +134,12 @@ public class CollabController {
             throw new ForBiddenException("Access denied");
         }
 
+        if (!board.getOwner().getOid().equals(oid)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only board owner can add collaborators");
+        }
+
         // Add the collaborator
-        ShowCollabDTO newCollaborator = collabService.addCollaborator(boardId, addCollaboratorDTO.getEmail(), addCollaboratorDTO.getAccessRight());
+        ShowCollabDTO newCollaborator = collabService.addCollaborator(boardId, req.get("email"), req.get("access_right"), oid);
         return ResponseEntity.status(HttpStatus.CREATED).body(newCollaborator);
     }
 

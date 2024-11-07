@@ -2,7 +2,9 @@ package com.example.int221backend.services;
 
 import com.example.int221backend.dtos.ShowCollabDTO;
 import com.example.int221backend.entities.AccessRight;
+import com.example.int221backend.entities.BoardVisi;
 import com.example.int221backend.entities.local.Board;
+import com.example.int221backend.entities.local.BoardCollabId;
 import com.example.int221backend.entities.local.Collaborators;
 import com.example.int221backend.entities.local.UserLocal;
 import com.example.int221backend.entities.shared.User;
@@ -13,9 +15,12 @@ import com.example.int221backend.repositories.local.UserLocalRepository;
 import com.example.int221backend.repositories.shared.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,68 +46,101 @@ public class CollabService {
             throw new ItemNotFoundException("board not found");
         }
 
-        List<Collaborators> collaborators = collabRepository.findByBoard_BoardId(boardId);
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+
+        List<Collaborators> collaborators = collabRepository.findByBoard(board);
 
         return collaborators.stream()
-                .map(collaborator -> {
-                    ShowCollabDTO dto = modelMapper.map(collaborator, ShowCollabDTO.class);
-                    dto.setOid(collaborator.getUser().getOid());
-                    dto.setName(collaborator.getUser().getName());
-                    dto.setEmail(collaborator.getUser().getEmail());
-                    return dto;
-                })
+                .map(collab -> modelMapper.map(collab, ShowCollabDTO.class))
                 .collect(Collectors.toList());
     }
 
     public ShowCollabDTO getCollabByOid(String boardId, String Oid){
 
-        Collaborators collaborators = collabRepository.findByUser_OidAndBoard_BoardId(Oid,boardId);
-        if (collaborators == null){
-            throw  new ItemNotFoundException("collaborator not found");
-        }
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board not found"));
 
-        ShowCollabDTO showCollabDTO = modelMapper.map(collaborators, ShowCollabDTO.class);
-        showCollabDTO.setOid(collaborators.getUser().getOid());
-        showCollabDTO.setName(collaborators.getUser().getName());
-        showCollabDTO.setEmail(collaborators.getUser().getEmail());
-        return showCollabDTO;
+        UserLocal user = userLocalRepository.findByOid(Oid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        Collaborators collaborators = collabRepository.findByBoardAndUser(board, user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Collaborator not found"));
+
+        return modelMapper.map(collaborators, ShowCollabDTO.class);
     }
 
     public boolean isCollaborator(String userOid, String boardId) {
-        Collaborators collaborator = collabRepository.findByUser_OidAndBoard_BoardId(userOid, boardId);
-        return collaborator != null; // Returns true if a collaborator exists
+
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found"));
+
+        if (board.getOwner().getOid().equals(userOid)) {
+            return true;
+        }
+
+        // Check if user is collaborator
+        UserLocal user = userLocalRepository.findByOid(userOid)
+                .orElse(null);
+        if (user == null) {
+            return false;
+        }
+
+        Optional<Collaborators> collaborators = collabRepository.findByBoardAndUser(board, user);
+        return collaborators.isPresent();
     }
 
-    public ShowCollabDTO addCollaborator(String boardId, String email , AccessRight access_right) {
-        // Check if the email already exists in collaborators
+    public ShowCollabDTO addCollaborator(String boardId, String email , String access_right, String oid) {
+        Board board = boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("board not found"));
+
         Collaborators existingCollaborator = collabRepository.findByUser_EmailAndBoard_BoardId(email, boardId);
         if (existingCollaborator != null) {
             throw new ItemNotFoundException("Collaborator already exists");
         }
-        System.out.println(email);
-        // Find the user by email
 
-        UserLocal userLocal = userLocalRepository.findByEmail(email);
-        if (userLocal == null){
-            throw new ItemNotFoundException("User not found");
+        if (email == null || access_right == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email and access_right are required");
+        }
+
+        System.out.println(email);
+        AccessRight accessRight;
+        try {
+            accessRight = AccessRight.valueOf(access_right.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid access_right value");
+        }
+
+        User user = (User) userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found in system"));
+
+        UserLocal userLocal = userLocalRepository.findByEmail(email)
+                .orElseGet(() -> {
+                  UserLocal newUserLocal = new UserLocal();
+                  newUserLocal.setOid(user.getOid());
+                  newUserLocal.setName(user.getName());
+                  newUserLocal.setUsername(user.getUsername());
+                  newUserLocal.setEmail(user.getEmail());
+                  return userLocalRepository.save(newUserLocal);
+                });
+
+        if (userLocal.getOid().equals(oid)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot add yourself as a collaborator");
+        }
+
+        if (collabRepository.findByBoardAndUser(board, userLocal).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User is already a collaborator");
         }
 
         // Create and save the new collaborator
         Collaborators newCollaborator = new Collaborators();
+        BoardCollabId id = new BoardCollabId(boardId, userLocal.getOid());
+        newCollaborator.setId(id);
+        newCollaborator.setBoard(board);
         newCollaborator.setUser(userLocal);
-        newCollaborator.setBoard(boardRepository.findById(boardId).orElseThrow(() -> new ItemNotFoundException("Board not found")));
-        newCollaborator.setAccessRight(access_right);
+        newCollaborator.setEmail(email);
+        newCollaborator.setAccessRight(accessRight);
+        newCollaborator.setName(userLocal.getName());
 
-
-
-
-        // Map to DTO
-        ShowCollabDTO showCollabDTO = modelMapper.map(newCollaborator, ShowCollabDTO.class);
-        showCollabDTO.setOid(userLocal.getOid());
-        showCollabDTO.setName(userLocal.getName());
-        showCollabDTO.setEmail(userLocal.getEmail());
-        showCollabDTO.setAccess_right(access_right);
-        return showCollabDTO;
+        Collaborators savedCollaborator = collabRepository.save(newCollaborator);
+        return modelMapper.map(savedCollaborator,ShowCollabDTO.class);
     }
 
     public List<Collaborators> getCollabsByOnlyOid(String oid){

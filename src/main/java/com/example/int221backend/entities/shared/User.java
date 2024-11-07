@@ -40,4 +40,5 @@ public class User {
     @Lob
     @Column(name = "role", nullable = false)
     private String role;
+
 }

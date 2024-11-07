@@ -1,6 +1,7 @@
 package com.example.int221backend.services;
 
 import com.example.int221backend.entities.local.UserLocal;
+import com.example.int221backend.exception.ItemNotFoundException;
 import com.example.int221backend.repositories.local.UserLocalRepository;
 import com.example.int221backend.repositories.shared.UserRepository;
 import com.example.int221backend.entities.shared.User;
@@ -60,7 +61,7 @@ public class UserService implements UserDetailsService {
     }
 
     public UserLocal findByOid(String oid) {
-        return userLocalRepository.findByOid(oid);
+        return userLocalRepository.findByOid(oid).orElseThrow(() -> new ItemNotFoundException("user not found"));
     }
 
 
