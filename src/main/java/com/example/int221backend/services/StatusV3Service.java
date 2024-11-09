@@ -1,6 +1,7 @@
 package com.example.int221backend.services;
 
 import com.example.int221backend.dtos.AddStatusDTO;
+import com.example.int221backend.dtos.StatusAndTaskCDTO;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
 import com.example.int221backend.entities.local.TaskV3;
@@ -13,7 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class StatusV3Service {
@@ -33,19 +37,38 @@ public class StatusV3Service {
     private BoardService boardService;
 
     @Transactional("projectManagementTransactionManager")
-    public List<Status> getAllStatus(String boardId) {
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board ID " + boardId + " DOES NOT EXIST!!!"));
+    public List<StatusAndTaskCDTO> getAllStatus(String boardId) {
+        List<Status> allStatus = statusV3Repository.findAllStatus(boardId);
+        List<Object[]> taskCountResults = taskV3Repository.countTasksByStatusForBoard(boardId);
 
-        return statusV3Repository.findByBoard(board);
+        Map<Integer, Long> taskCountMap = new HashMap<>();
+        for (Object[] result : taskCountResults) {
+            Integer statusId = (Integer) result[0];
+            Long count = (Long) result[1];
+            taskCountMap.put(statusId, count);
+        }
+
+        List<StatusAndTaskCDTO> statusWithTaskCountList = new ArrayList<>();
+        for (Status status : allStatus) {
+            Long taskCount = taskCountMap.getOrDefault(status.getId(), 0L);
+            statusWithTaskCountList.add(new StatusAndTaskCDTO(
+                    status.getId(),
+                    status.getName(),
+                    status.getDescription(),
+                    status.getColor(),
+                    status.getBoard().getBoardId(),
+                    taskCount.toString()
+            ));
+        }
+
+        return statusWithTaskCountList;
     }
 
     @Transactional("projectManagementTransactionManager")
     public Status getStatusById(Integer id, String boardId) {
-        Status status = statusV3Repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
-        if (!status.getBoard().getBoardId().equals(boardId)){
-            throw new ItemNotFoundException("Board not found");
+        Status status = statusV3Repository.findStatusByIdAndBoard(id, boardId);
+        if (status == null) {
+            throw new ItemNotFoundException("Status " + id + "is not found!, please try again.");
         }
         return status;
     }

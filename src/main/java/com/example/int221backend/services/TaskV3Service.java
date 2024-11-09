@@ -51,7 +51,7 @@ public class TaskV3Service {
         }
     }
 
-    public TaskV3 getTaskById(Integer id, String boardId) {
+    public TaskV3 getTaskById(String id, String boardId) {
         TaskV3 taskV3 = taskV3Repository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("Task not found"));
         if (!taskV3.getBoard().getBoardId().equals(boardId)){
@@ -102,7 +102,7 @@ public class TaskV3Service {
     }
 
     @Transactional("projectManagementTransactionManager")
-    public void deleteTask(Integer taskId, String boardId){
+    public void deleteTask(String taskId, String boardId){
         TaskV3 task = taskV3Repository.findById(taskId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TASK ID" + taskId + "DOES NOT EXiTS!!!"));
         if (!task.getBoard().getBoardId().equals(boardId)){
@@ -113,7 +113,7 @@ public class TaskV3Service {
     }
 
     @Transactional("projectManagementTransactionManager")
-    public AddTaskV2DTO updateTask(TaskV3 addTaskDTO, Integer taskId, Integer statusId, String boardId) {
+    public AddTaskV2DTO updateTask(TaskV3 addTaskDTO, String taskId, Integer statusId, String boardId) {
         if (addTaskDTO.getTitle() == null || addTaskDTO.getTitle().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title must not be null");
         }
@@ -150,7 +150,7 @@ public class TaskV3Service {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board ID " + boardId + " does not exist"));
 
-        Integer id = existingTask.getId();
+        String id = existingTask.getId();
         modelMapper.map(addTaskDTO, existingTask);
         existingTask.setId(id);
         existingTask.setStatus(status);

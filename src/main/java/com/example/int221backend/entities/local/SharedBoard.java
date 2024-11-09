@@ -7,10 +7,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "personal_boards")
+@Table(name = "personal_board")
 public class SharedBoard {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "shared_id")
   private Long sharedId;
 
   @ManyToOne
@@ -20,19 +21,6 @@ public class SharedBoard {
   @ManyToOne
   @JoinColumn(name = "board_id", nullable = false)
   private Board board;
-
-//    @Column(name = "added_on")
-//    private ZonedDateTime addedOn;
-//
-//    @NotNull
-//    @Enumerated(EnumType.STRING)
-//    @Column(name = "access_right", nullable = false)
-//    private AccessRight accessRight = AccessRight.READ;
-//
-//    public enum AccessRight {
-//        READ,
-//        WRITE
-//    }
 
 
 }

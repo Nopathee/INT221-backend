@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -92,7 +93,7 @@ public class CollabController {
 
         String accessRight = req.getAccessRight();
         if (accessRight == null || accessRight.isEmpty()) {
-            throw new BadRequestException("Access right cannot be empty.");
+            throw new BadRequestException("access right cannot be empty");
         }
 
         if (board.getOwner().getEmail().equalsIgnoreCase(req.getEmail())) {

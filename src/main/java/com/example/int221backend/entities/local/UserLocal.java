@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name = "usersLocal")
 public class UserLocal {
     @Id
-    @Column(name = "oid", nullable = false, length = 36)
+    @Column(name = "owner_id", nullable = false, length = 36)
     private String oid;
 
     @NotNull
@@ -33,7 +33,6 @@ public class UserLocal {
     @Column(name = "email", nullable = false, length = 50)
     private String email;
 
-
     @NotNull
     @ColumnDefault("'STUDENT'")
     @Lob
@@ -47,5 +46,6 @@ public class UserLocal {
     private ZonedDateTime updatedOn;
 
     @OneToMany(mappedBy = "owner")
+    @JsonIgnore
     private List<SharedBoard> sharedBoards;
 }

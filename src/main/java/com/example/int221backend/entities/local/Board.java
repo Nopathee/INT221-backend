@@ -11,6 +11,7 @@ import io.viascom.nanoid.NanoId;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.security.SecureRandom;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -43,19 +44,20 @@ public class Board {
     @Enumerated(EnumType.STRING)
     private BoardVisi visibility = BoardVisi.PRIVATE;
 
-//    @Column(name = "createdOn", updatable = false, insertable = false)
-//    private Date createdOn;
-//
-//    @Column(name = "updatedOn", updatable = false, insertable = false)
-//    private Date updatedOn;
+    @Column(name = "created_on", updatable = false, insertable = false)
+    private ZonedDateTime createdOn;
+
+    @Column(name = "updated_on", updatable = false, insertable = false)
+    private ZonedDateTime updatedOn;
 
     @PrePersist
     private void prePersist() {
-        if (this.boardId == null) {
-            this.boardId = NanoId.generate(10);
-        }
         if (this.visibility == null) {
             this.visibility = BoardVisi.PRIVATE;
+        }
+
+        if (this.boardId == null){
+            this.boardId = NanoId.generate(10);
         }
     }
 

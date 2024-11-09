@@ -153,12 +153,12 @@ public class BoardController {
             }
 
 
-            Board newBoard = new Board();
+            AddBoardDTO newBoard = new AddBoardDTO();
             newBoard.setName(addBoardDTO.getName());
             UserLocal owner = userService.findByOid(oid);
             newBoard.setOwner(owner);
 
-            Board createdBoard = boardService.addBoard(newBoard);
+            AddBoardDTO createdBoard = boardService.addBoard(newBoard,afterSubToken);
             AddBoardDTO createdBoardDTO = modelMapper.map(createdBoard, AddBoardDTO.class);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(createdBoardDTO);

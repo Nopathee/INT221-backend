@@ -8,6 +8,7 @@ import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Collaborators;
 import com.example.int221backend.entities.local.UserLocal;
 import com.example.int221backend.entities.shared.User;
+import com.example.int221backend.exception.BadRequestException;
 import com.example.int221backend.exception.ConflictException;
 import com.example.int221backend.exception.ItemNotFoundException;
 import com.example.int221backend.repositories.local.BoardRepository;

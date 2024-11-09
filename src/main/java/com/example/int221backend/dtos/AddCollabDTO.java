@@ -1,5 +1,6 @@
 package com.example.int221backend.dtos;
 
+import com.example.int221backend.entities.AccessRight;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Data;

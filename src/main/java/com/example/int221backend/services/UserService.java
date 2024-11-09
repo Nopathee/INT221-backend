@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +55,8 @@ public class UserService implements UserDetailsService {
         userLocal.setName(user.getName());
         userLocal.setEmail(user.getEmail());
         userLocal.setRole(user.getRole());
+        userLocal.setCreatedOn(ZonedDateTime.now());
+        userLocal.setUpdatedOn(ZonedDateTime.now());
 
         userLocalRepository.save(userLocal);
 

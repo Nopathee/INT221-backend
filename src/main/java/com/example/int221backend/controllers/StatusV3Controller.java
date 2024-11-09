@@ -3,13 +3,14 @@ package com.example.int221backend.controllers;
 import com.example.int221backend.dtos.AddStatusDTO;
 import com.example.int221backend.dtos.BoardDTO;
 import com.example.int221backend.dtos.BoardIdDTO;
+import com.example.int221backend.dtos.StatusAndTaskCDTO;
+import com.example.int221backend.entities.AccessRight;
+import com.example.int221backend.entities.BoardVisi;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
 import com.example.int221backend.exception.ForBiddenException;
-import com.example.int221backend.services.BoardService;
-import com.example.int221backend.services.CollabService;
-import com.example.int221backend.services.JwtService;
-import com.example.int221backend.services.StatusV3Service;
+import com.example.int221backend.exception.ItemNotFoundException;
+import com.example.int221backend.services.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -41,57 +42,37 @@ public class StatusV3Controller {
     @Autowired
     private CollabService collabService;
 
+    @Autowired
+    private AccessControlService accessControlService;
+
     @GetMapping("")
     public ResponseEntity<Object> getAllStatuses(
             @PathVariable String boardId,
             @RequestHeader(value = "Authorization", required = false) String token
-    ) {
-        if (!boardService.existsById(boardId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "Board not found"));
-        }
+    ){      BoardDTO boardDTO = boardService.getBoardByBoardId(boardId);
+        if (boardDTO == null) {
+        throw new ItemNotFoundException("Board not found !!!");
+    }
 
-        BoardDTO board = boardService.getBoardByBoardId(boardId);
-        boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
+    BoardVisi visibility = BoardVisi.valueOf(boardDTO.getVisibility().toUpperCase());
+        if (visibility == BoardVisi.PUBLIC) {
+        List<StatusAndTaskCDTO> statuses = statusService.getAllStatus(boardId);
+        return ResponseEntity.ok(statuses);
+    }
 
-        // Check if the token is null or empty
-        if (token == null || token.isEmpty()) {
-            if (!isPublic) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Collections.singletonMap("error", "Access denied to private board"));
-            } else {
-                List<Status> statuses = statusService.getAllStatus(boardId);
-                List<AddStatusDTO> statusDTOs = statuses.stream()
-                        .map(status -> modelMapper.map(status, AddStatusDTO.class))
-                        .collect(Collectors.toList());
-                return ResponseEntity.ok(statusDTOs);
-            }
-        }
+    String userId = null;
+        if (token != null && token.startsWith("Bearer ")) {
+        String jwtToken = token.substring(7);
+        userId = jwtService.getOidFromToken(jwtToken);
+    }
 
-        // Process the token if it's present
-        try {
-            String afterSubToken = token.substring(7);
-            String oid = jwtService.getOidFromToken(afterSubToken);
-            boolean isOwner = board.getOwner().getUserId().equals(oid);
-            boolean isCollab = collabService.isCollaborator(oid,boardId);
+    boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.READ);
+        if (!hasAccess) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied! You do not have permission to access this board.");
+    }
 
-
-            // Check if the user is not the owner of the private board
-            if (!isOwner && !isPublic && !isCollab) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Collections.singletonMap("error", "Access denied to private board"));
-            }
-
-            List<Status> statuses = statusService.getAllStatus(boardId);
-            List<AddStatusDTO> statusDTOs = statuses.stream()
-                    .map(status -> modelMapper.map(status, AddStatusDTO.class))
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(statusDTOs);
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("error", "Failed to retrieve statuses"));
-        }
+    List<StatusAndTaskCDTO> statuses = statusService.getAllStatus(boardId);
+        return ResponseEntity.ok(statuses);
     }
 
 
@@ -102,43 +83,33 @@ public class StatusV3Controller {
             @PathVariable Integer statusId,
             @RequestHeader(value = "Authorization", required = false) String token
     ) {
-        if (!boardService.existsById(boardId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "Board not found"));
-        }
-        try {
-        if (token == null || token.isEmpty()) {
-            // Assuming public boards allow access without authentication
-            BoardDTO board = boardService.getBoardByBoardId(boardId);
-            if (board.getVisibility().toString().equalsIgnoreCase("public")) {
-                Status status = statusService.getStatusById(statusId, boardId);
-                return ResponseEntity.ok(modelMapper.map(status, AddStatusDTO.class));
-            } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Collections.singletonMap("error", "Access denied"));
-            }
+        BoardDTO boardDTO = boardService.getBoardByBoardId(boardId);
+        if (boardDTO == null) {
+            throw new ItemNotFoundException("Board not found !!!");
         }
 
-
-            String afterSubToken = token.substring(7);
-            String oid = jwtService.getOidFromToken(afterSubToken);
-
-            BoardDTO board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getUserId().equals(oid);
-            boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
-            boolean isCollab = collabService.isCollaborator(oid,boardId);
-
-
-            if (isOwner || isPublic || isCollab) {
-                Status status = statusService.getStatusById(statusId, boardId);
-                return ResponseEntity.ok(modelMapper.map(status, AddStatusDTO.class));
-            } else {
-                throw new ForBiddenException("Access denied");
-            }
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .body(Collections.singletonMap("error", e.getReason()));
+        BoardVisi visibility = BoardVisi.valueOf(boardDTO.getVisibility().toUpperCase());
+        // ถ้าเป็นบอร์ด public สามารถเข้าถึงได้โดยไม่ต้องใช้ token
+        if (visibility == BoardVisi.PUBLIC) {
+            List<StatusAndTaskCDTO> statuses = statusService.getAllStatus(boardId);
+            return ResponseEntity.ok(statuses);
         }
+
+        // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
+        String userId = null;
+        if (token != null && token.startsWith("Bearer ")) {
+            String jwtToken = token.substring(7);
+            userId = jwtService.getOidFromToken(jwtToken);
+        }
+
+        boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.READ);
+        if (!hasAccess) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied! You do not have permission to access this board.");
+        }
+
+        // ถ้ามีสิทธิ์เข้าถึงบอร์ดนี้ ให้ดึงสถานะตาม boardId และ statusId
+        Status statusList = statusService.getStatusById(statusId, boardId);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied! You are not the owner of this private board.");
     }
 
 

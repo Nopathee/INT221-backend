@@ -16,6 +16,7 @@ public class Collaborators {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "collab_id")
     private String collabId;
 
     @ManyToOne

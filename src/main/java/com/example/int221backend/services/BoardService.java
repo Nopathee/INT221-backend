@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -101,26 +102,43 @@ public class BoardService {
     }
 
     @Transactional("projectManagementTransactionManager")
-    public Board addBoard(Board newBoard) {
-        if (newBoard == null || newBoard.getName() == null || newBoard.getName().isEmpty()){
-            throw new BadRequestException("boardName is null, empty");
+    public AddBoardDTO addBoard(AddBoardDTO newBoard,String token) {
+        String userName = jwtService.getUsernameFromToken(token);
+        UserLocal owner = userLocalRepository.findByUsername(userName);
+
+        if (owner == null){
+            throw new ItemNotFoundException("Owner not found!");
         }
 
-        if (newBoard.getName().length() > 120){
-            throw new BadRequestException("boardName is longer than limit");
+        Board board = new Board();
+        board.setName(newBoard.getName());
+        board.setOwner(newBoard.getOwner());
+        board.setCreatedOn(ZonedDateTime.now());
+        board.setUpdatedOn(ZonedDateTime.now());
+
+        if (newBoard.getVisibility() != null &&
+                (BoardVisi.PRIVATE.toString().equals(newBoard.getVisibility()) || BoardVisi.PUBLIC.toString().equals(newBoard.getVisibility()))){
+            board.setVisibility(BoardVisi.valueOf(newBoard.getVisibility().toUpperCase()));
+        } else if (newBoard.getVisibility() == null || newBoard.getVisibility().isEmpty() || newBoard.getVisibility().isBlank()) {
+            board.setVisibility(BoardVisi.PRIVATE);
+        }else {
+            throw new BadRequestException("Invalid Visibility");
         }
 
-        if (newBoard.getVisibility() == null || newBoard.getVisibility().toString().isEmpty()){
-            newBoard.setVisibility(BoardVisi.PRIVATE);
-        } else if (newBoard.getVisibility() != null &&
-                ("private".equalsIgnoreCase(newBoard.getVisibility().toString()) ||
-                "public".equalsIgnoreCase(newBoard.getVisibility().toString()))
-            ) {
-            newBoard.setVisibility(newBoard.getVisibility());
-        } else {
-            throw new BadRequestException("visibility should be public or private");
-        }
-        return boardRepository.save(newBoard);
+        boardRepository.save(board);
+
+        SharedBoard sharedBoard = new SharedBoard();
+        sharedBoard.setBoard(board);
+        sharedBoard.setOwner(owner);
+        sharedBoardRepository.save(sharedBoard);
+
+        AddBoardDTO addBoardDTO = new AddBoardDTO();
+        addBoardDTO.setId(board.getBoardId());
+        addBoardDTO.setName(board.getName());
+        addBoardDTO.setVisibility(board.getVisibility().toString());
+        addBoardDTO.setOwner(owner);
+
+        return addBoardDTO;
     }
 
     public BoardDTO getBoardByBoardId(String boardId) {

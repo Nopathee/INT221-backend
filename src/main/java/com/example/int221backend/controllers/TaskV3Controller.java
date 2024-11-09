@@ -1,10 +1,13 @@
 package com.example.int221backend.controllers;
 
 import com.example.int221backend.dtos.*;
+import com.example.int221backend.entities.AccessRight;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
 import com.example.int221backend.entities.local.TaskV3;
+import com.example.int221backend.exception.AccessDeniedException;
 import com.example.int221backend.exception.ForBiddenException;
+import com.example.int221backend.exception.ItemNotFoundException;
 import com.example.int221backend.services.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +44,9 @@ public class TaskV3Controller {
     @Autowired
     private CollabService collabService;
 
+    @Autowired
+    private AccessControlService accessControlService;
+
     @GetMapping("")
     public ResponseEntity<Object> getAllTask(
             @PathVariable String boardId,
@@ -53,82 +59,58 @@ public class TaskV3Controller {
         }
 
         BoardDTO board = boardService.getBoardByBoardId(boardId);
-        boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
-
-        if (token == null || token.isEmpty()) {
-            if (isPublic) {
-                List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses, boardId);
-                List<SimpleTaskV3DTO> simpleTaskV3DTOs = tasks.stream()
-                        .map(task -> modelMapper.map(task, SimpleTaskV3DTO.class))
-                        .collect(Collectors.toList());
-
-                return ResponseEntity.ok(simpleTaskV3DTOs);
-            } else {
-                throw new ForBiddenException("Access denies");
-            }
+        if (board == null){
+            throw new ItemNotFoundException("board not found");
         }
 
-        String afterSubToken = token.substring(7);
-        String oid = jwtService.getOidFromToken(afterSubToken);
-        boolean isOwner = board.getOwner().getUserId().equals(oid);
-        boolean isCollab = collabService.isCollaborator(oid,boardId);
+        String oId = null;
 
-        if (isOwner || isPublic || isCollab) {
-            List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses, boardId);
-            List<SimpleTaskV3DTO> simpleTaskV3DTOs = tasks.stream()
-                    .map(task -> modelMapper.map(task, SimpleTaskV3DTO.class))
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(simpleTaskV3DTOs);
-        } else {
-            throw new ForBiddenException("Access denies");
+        if (token != null && token.startsWith("Bearer ")) {
+            String afterSubToken = token.substring(7);
+            oId = jwtService.getOidFromToken(afterSubToken);
         }
+
+        boolean hasAccess = accessControlService.hasAccess(oId,boardId,token, AccessRight.READ);
+        if (!hasAccess){
+            throw new AccessDeniedException("Access Denied!");
+        }
+
+        List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses,boardId);
+        return ResponseEntity.ok(tasks);
     }
 
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getTaskById(
             @PathVariable String boardId,
-            @PathVariable Integer id,
+            @PathVariable String id,
             @RequestHeader(value = "Authorization", required = false) String token
     ) {
-        if (!boardService.existsById(boardId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("error", "Board not found"));
+        BoardDTO boardDTO = boardService.getBoardByBoardId(boardId);
+        if (boardDTO == null) {
+            throw new ItemNotFoundException("Board not found !!!");
         }
 
-        BoardDTO board = boardService.getBoardByBoardId(boardId);
-        boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
-
-        try {
-            if (token == null || token.isEmpty()) {
-                // Allow access if the board is public
-                if (isPublic) {
-                    TaskV3 task = taskV3Service.getTaskById(id, boardId);
-                    return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
-                } else {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                            .body(Collections.singletonMap("error", "Access denied"));
-                }
-            }
-
-            // Handle token authentication
-            String afterSubToken = token.substring(7);
-            String oid = jwtService.getOidFromToken(afterSubToken);
-            boolean isOwner = board.getOwner().getUserId().equals(oid);
-            boolean isCollab = collabService.isCollaborator(oid,boardId);
-
-
-            if (isOwner || isPublic || isCollab) { // Allow owner or public access
-                TaskV3 task = taskV3Service.getTaskById(id, boardId);
-                return ResponseEntity.ok(modelMapper.map(task, SimpleTaskV3DTO.class));
-            } else {
-                throw new ForBiddenException("Access denied");
-            }
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .body(Collections.singletonMap("error", e.getReason()));
+        // ถ้า token ถูกส่งเข้ามา ดึง userId จาก JWT token
+        String userId = null;
+        if (token != null && token.startsWith("Bearer ")) {
+            String jwtToken = token.substring(7);
+            userId = jwtService.getOidFromToken(jwtToken);
         }
+
+        // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
+        boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.READ);
+        // ถ้าผู้ใช้ไม่มีสิทธิ์เข้าถึงบอร์ดนี้ ให้ส่ง response ว่า access denied
+        if (!hasAccess) {
+            throw new AccessDeniedException("Access denied!!");
+        }
+
+        TaskV3 task = taskV3Service.getTaskById(boardId, id);
+        if (task == null) {
+            throw new ItemNotFoundException("Task not found !!!");
+        }
+
+        return ResponseEntity.ok(task);
     }
 
 
@@ -192,7 +174,7 @@ public class TaskV3Controller {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTask(@PathVariable String boardId, @PathVariable Integer id,@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> deleteTask(@PathVariable String boardId, @PathVariable String id,@RequestHeader("Authorization") String token) {
         try {
             if (!boardService.existsById(boardId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -221,7 +203,7 @@ public class TaskV3Controller {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTask(@PathVariable String boardId, @PathVariable Integer id, @RequestBody(required = false) AddTaskDTO addTaskDTO,@RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> updateTask(@PathVariable String boardId, @PathVariable String id, @RequestBody(required = false) AddTaskDTO addTaskDTO,@RequestHeader("Authorization") String token) {
         try {
             if (!boardService.existsById(boardId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)

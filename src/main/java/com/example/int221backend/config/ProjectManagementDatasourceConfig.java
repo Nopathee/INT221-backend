@@ -21,24 +21,43 @@ import java.util.Objects;
 @EnableTransactionManagement
 @EnableJpaRepositories(
         basePackages = "com.example.int221backend.repositories.local",
-        entityManagerFactoryRef = "taskBoardEntityManagerFactory",
-        transactionManagerRef = "taskBoardTransactionManager"
+        entityManagerFactoryRef = "projectManagementEntityManager",
+        transactionManagerRef = "projectManagementTransactionManager"
 )
 public class ProjectManagementDatasourceConfig {
 
     @Bean
+    @ConfigurationProperties(prefix = "spring.datasource.pm")
+    public DataSourceProperties projectManagementDataSourceProperties() {
+        return new DataSourceProperties();
+    }
+
+    @Bean
+    @ConfigurationProperties(prefix = "spring.datasource.pm.configuration")
+    public DataSource projectManagementDataSource() {
+        return projectManagementDataSourceProperties()
+                .initializeDataSourceBuilder()
+                .type(HikariDataSource.class)
+                .build();
+    }
+
+    @Bean(name = "projectManagementEntityManager")
     @Primary
-    public LocalContainerEntityManagerFactoryBean taskBoardEntityManagerFactory(
-            @Qualifier("taskBoardDataSource") DataSource dataSource,
+    public LocalContainerEntityManagerFactoryBean projectManagementEntityManagerFactory(
             EntityManagerFactoryBuilder builder) {
-        return builder.dataSource(dataSource)
+        return builder
+                .dataSource(projectManagementDataSource())
                 .packages("com.example.int221backend.entities.local")
                 .build();
     }
 
-    @Bean
-    public PlatformTransactionManager taskBoardTransactionManager(
-            @Qualifier("taskBoardEntityManagerFactory") LocalContainerEntityManagerFactoryBean taskBoardEntityManagerFactory) {
-        return new JpaTransactionManager(Objects.requireNonNull(taskBoardEntityManagerFactory.getObject()));
+    @Bean(name = "projectManagementTransactionManager")
+    public PlatformTransactionManager projectManagementTransactionManager(
+            final @Qualifier("projectManagementEntityManager") LocalContainerEntityManagerFactoryBean projectManagementEntityManager) {
+        return new JpaTransactionManager(
+                Objects.requireNonNull(
+                        projectManagementEntityManager.getObject()
+                )
+        );
     }
 }
