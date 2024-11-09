@@ -9,4 +9,6 @@ public interface UserLocalRepository extends JpaRepository<UserLocal,String> {
     Optional<UserLocal> findByOid(String oid);
 
     Optional<UserLocal> findByEmail(String email);
+
+    UserLocal findByUsername(String username);
 }

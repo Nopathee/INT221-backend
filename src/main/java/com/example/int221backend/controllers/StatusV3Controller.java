@@ -1,6 +1,7 @@
 package com.example.int221backend.controllers;
 
 import com.example.int221backend.dtos.AddStatusDTO;
+import com.example.int221backend.dtos.BoardDTO;
 import com.example.int221backend.dtos.BoardIdDTO;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
@@ -50,7 +51,7 @@ public class StatusV3Controller {
                     .body(Collections.singletonMap("error", "Board not found"));
         }
 
-        Board board = boardService.getBoardByBoardId(boardId);
+        BoardDTO board = boardService.getBoardByBoardId(boardId);
         boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
 
         // Check if the token is null or empty
@@ -71,7 +72,7 @@ public class StatusV3Controller {
         try {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
-            boolean isOwner = board.getOwner().getOid().equals(oid);
+            boolean isOwner = board.getOwner().getUserId().equals(oid);
             boolean isCollab = collabService.isCollaborator(oid,boardId);
 
 
@@ -108,7 +109,7 @@ public class StatusV3Controller {
         try {
         if (token == null || token.isEmpty()) {
             // Assuming public boards allow access without authentication
-            Board board = boardService.getBoardByBoardId(boardId);
+            BoardDTO board = boardService.getBoardByBoardId(boardId);
             if (board.getVisibility().toString().equalsIgnoreCase("public")) {
                 Status status = statusService.getStatusById(statusId, boardId);
                 return ResponseEntity.ok(modelMapper.map(status, AddStatusDTO.class));
@@ -122,8 +123,8 @@ public class StatusV3Controller {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
 
-            Board board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getOid().equals(oid);
+            BoardDTO board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getUserId().equals(oid);
             boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
             boolean isCollab = collabService.isCollaborator(oid,boardId);
 
@@ -151,8 +152,8 @@ public class StatusV3Controller {
         try {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
-            Board board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getOid().equals(oid);
+            BoardDTO board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getUserId().equals(oid);
 
             if (statusDTO == null || statusDTO.getName() == null) {
                 if (isOwner){
@@ -192,8 +193,8 @@ public class StatusV3Controller {
         try {
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
-            Board board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getOid().equals(oid);
+            BoardDTO board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getUserId().equals(oid);
             if (statusDTO == null || statusDTO.getName() == null) {
                 if (isOwner){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -228,8 +229,8 @@ public class StatusV3Controller {
 
             String oid = jwtService.getOidFromToken(afterSubToken);
 
-            Board board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getOid().equals(oid);
+            BoardDTO board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getUserId().equals(oid);
 
             if (isOwner) {
                 statusService.deleteStatus(statusId);
@@ -258,8 +259,8 @@ public class StatusV3Controller {
 
             String oid = jwtService.getOidFromToken(afterSubToken);
 
-            Board board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getOid().equals(oid);
+            BoardDTO board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getUserId().equals(oid);
 
             if (isOwner) {
                 statusService.deleteAndTranStatus(id, newId);

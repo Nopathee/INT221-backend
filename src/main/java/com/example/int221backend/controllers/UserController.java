@@ -78,7 +78,6 @@ public class UserController {
 
             return ResponseEntity.ok(responseBody);
         } catch (Exception e) {
-            System.out.println(e);
             throw new NotCreatedException("Refresh token failed!");
         }
     }

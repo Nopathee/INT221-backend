@@ -6,6 +6,9 @@ import lombok.*;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.time.ZonedDateTime;
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -36,4 +39,13 @@ public class UserLocal {
     @Lob
     @Column(name = "role", nullable = false)
     private String role;
+
+    @Column(name = "created_on", nullable = false)
+    private ZonedDateTime createdOn;
+
+    @Column(name = "updated_on", nullable = false)
+    private ZonedDateTime updatedOn;
+
+    @OneToMany(mappedBy = "owner")
+    private List<SharedBoard> sharedBoards;
 }

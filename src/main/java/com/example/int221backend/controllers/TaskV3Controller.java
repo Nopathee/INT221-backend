@@ -1,9 +1,6 @@
 package com.example.int221backend.controllers;
 
-import com.example.int221backend.dtos.AddStatusDTO;
-import com.example.int221backend.dtos.AddTaskDTO;
-import com.example.int221backend.dtos.AddTaskV2DTO;
-import com.example.int221backend.dtos.SimpleTaskV3DTO;
+import com.example.int221backend.dtos.*;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
 import com.example.int221backend.entities.local.TaskV3;
@@ -55,7 +52,7 @@ public class TaskV3Controller {
                     .body(Collections.singletonMap("error", "Board not found"));
         }
 
-        Board board = boardService.getBoardByBoardId(boardId);
+        BoardDTO board = boardService.getBoardByBoardId(boardId);
         boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
 
         if (token == null || token.isEmpty()) {
@@ -73,7 +70,7 @@ public class TaskV3Controller {
 
         String afterSubToken = token.substring(7);
         String oid = jwtService.getOidFromToken(afterSubToken);
-        boolean isOwner = board.getOwner().getOid().equals(oid);
+        boolean isOwner = board.getOwner().getUserId().equals(oid);
         boolean isCollab = collabService.isCollaborator(oid,boardId);
 
         if (isOwner || isPublic || isCollab) {
@@ -100,7 +97,7 @@ public class TaskV3Controller {
                     .body(Collections.singletonMap("error", "Board not found"));
         }
 
-        Board board = boardService.getBoardByBoardId(boardId);
+        BoardDTO board = boardService.getBoardByBoardId(boardId);
         boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
 
         try {
@@ -118,7 +115,7 @@ public class TaskV3Controller {
             // Handle token authentication
             String afterSubToken = token.substring(7);
             String oid = jwtService.getOidFromToken(afterSubToken);
-            boolean isOwner = board.getOwner().getOid().equals(oid);
+            boolean isOwner = board.getOwner().getUserId().equals(oid);
             boolean isCollab = collabService.isCollaborator(oid,boardId);
 
 
@@ -168,8 +165,8 @@ public class TaskV3Controller {
 
             String oid = jwtService.getOidFromToken(afterSubToken);
 
-            Board board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getOid().equals(oid);
+            BoardDTO board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getUserId().equals(oid);
             if (addTaskDTO == null){
                 if (isOwner){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -206,8 +203,8 @@ public class TaskV3Controller {
 
             String oid = jwtService.getOidFromToken(afterSubToken);
 
-            Board board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getOid().equals(oid);
+            BoardDTO board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getUserId().equals(oid);
 
             if (isOwner){
                 taskV3Service.deleteTask(id, boardId);
@@ -246,8 +243,8 @@ public class TaskV3Controller {
 
             String oid = jwtService.getOidFromToken(afterSubToken);
 
-            Board board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getOid().equals(oid);
+            BoardDTO board = boardService.getBoardByBoardId(boardId);
+            boolean isOwner = board.getOwner().getUserId().equals(oid);
             if (addTaskDTO == null){
                 if (isOwner){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)

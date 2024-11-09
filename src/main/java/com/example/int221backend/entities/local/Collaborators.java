@@ -14,8 +14,9 @@ import java.util.Date;
 @Table(name = "collaborators")
 public class Collaborators {
 
-    @EmbeddedId
-    private BoardCollabId id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private String collabId;
 
     @ManyToOne
     @JoinColumn(name = "board_id", nullable = false)
@@ -25,23 +26,12 @@ public class Collaborators {
     @JoinColumn(name = "user_id", nullable = false)
     private UserLocal user;
 
-    @Column(name = "name", nullable = false)
-    private String name;
-
-    @Column(name = "email", length = 50, nullable = false)
-    private String email;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "access_right", nullable = false)
     private AccessRight accessRight;
 
     @Column(name = "added_on",insertable = false, updatable = false )
     @Temporal(TemporalType.TIMESTAMP)
-    private Date addedOn;
-
-    @PrePersist
-    protected void onCreate() {
-        addedOn = new Date();
-    }
+    private ZonedDateTime addedOn;
 
 }

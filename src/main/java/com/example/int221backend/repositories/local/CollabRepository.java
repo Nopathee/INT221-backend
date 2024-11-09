@@ -4,6 +4,8 @@ import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Collaborators;
 import com.example.int221backend.entities.local.UserLocal;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,5 +20,10 @@ public interface CollabRepository extends JpaRepository<Collaborators,Integer> {
 
     List<Collaborators> findByUser(UserLocal user);
 
+    List<Collaborators> findAllByUser_Oid(String oid);
 
+    List<Collaborators> findByBoard_BoardId(String bId);
+
+    @Query("SELECT c FROM Collaborators c WHERE c.board.boardId = :boardId AND c.user.email = :email")
+    Collaborators findByBoardIdAndUserEmail(@Param("boardId") String boardId, @Param("email") String email);
 }

@@ -1,12 +1,10 @@
 package com.example.int221backend.controllers;
 
-import com.example.int221backend.dtos.ShowCollabDTO;
+import com.example.int221backend.dtos.*;
+import com.example.int221backend.entities.AccessRight;
 import com.example.int221backend.entities.local.Board;
-import com.example.int221backend.exception.ForBiddenException;
-import com.example.int221backend.exception.ItemNotFoundException;
-import com.example.int221backend.services.BoardService;
-import com.example.int221backend.services.CollabService;
-import com.example.int221backend.services.JwtService;
+import com.example.int221backend.exception.*;
+import com.example.int221backend.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,43 +28,29 @@ public class CollabController {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private AccessControlService accessControlService;
+
+    @Autowired
+    private AccessRightService accessRightService;
+
     @GetMapping("")
     public ResponseEntity<Object> getAllCollaborators(
             @PathVariable String boardId,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
-        // Check if the board exists
-        if (!boardService.existsById(boardId)) {
-            throw new ItemNotFoundException("board not found");
+        BoardDTO board = boardService.getBoardByBoardId(boardId);
+
+        String accessToken = (token != null && !token.isEmpty()) ? token.substring(7) : null;
+        String userId = (accessToken != null) ? jwtService.getOidFromToken(accessToken) : null;
+
+        boolean checkAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.READ);
+        if (!checkAccess) {
+            throw new AccessDeniedException("Access denied");
         }
 
-        // Fetch the board to check its visibility
-        Board board = boardService.getBoardByBoardId(boardId);
-        boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
-
-        // If no token is provided, handle public access
-        if (token == null || token.isEmpty()) {
-            if (isPublic) {
-                List<ShowCollabDTO> collaborators = collabService.getAllCollab(boardId);
-                return ResponseEntity.ok(collaborators);
-            } else {
-                throw new ForBiddenException("Access denied");
-            }
-        }
-
-        // Extract OID from token
-        String afterSubToken = token.substring(7);
-        String oid = jwtService.getOidFromToken(afterSubToken);
-        boolean isOwner = board.getOwner().getOid().equals(oid);
-        boolean isCollaborator = collabService.isCollaborator(oid, boardId); // Check if user is a collaborator
-
-        // Check if the user is the owner or a collaborator or if the board is public
-        if (isOwner || isCollaborator || isPublic) {
-            List<ShowCollabDTO> collaborators = collabService.getAllCollab(boardId);
-            return ResponseEntity.ok(collaborators);
-        } else {
-            throw new ForBiddenException("Access denied");
-        }
+        ListShowCollabDTO response = collabService.getAllCollab(boardId);
+        return ResponseEntity.ok(response);
     }
 
     // Get a specific collaborator by their OID for a specific board
@@ -76,71 +60,65 @@ public class CollabController {
             @PathVariable String collabOid,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
-        // Check if the board exists
-        if (!boardService.existsById(boardId)) {
-            throw new ItemNotFoundException("board not found");
+        BoardDTO boardDTO = boardService.getBoardByBoardId(boardId);
+
+        String accessToken = (token != null && !token.isEmpty()) ? token.substring(7) : null;
+        String userId = (accessToken != null) ? jwtService.getOidFromToken(accessToken) : null;
+
+        boolean checkAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.READ);
+        if (!checkAccess) {
+            throw new AccessDeniedException("Access denied");
         }
 
-        // Fetch the board to check its visibility
-        Board board = boardService.getBoardByBoardId(boardId);
-        boolean isPublic = board.getVisibility().toString().equalsIgnoreCase("public");
-
-        // If no token is provided, handle public access
-        if (token == null || token.isEmpty()) {
-            if (isPublic) {
-                ShowCollabDTO collaborator = collabService.getCollabByOid(boardId, collabOid);
-                return ResponseEntity.ok(collaborator);
-            } else {
-                throw new ForBiddenException("Access denied");
-            }
-        }
-
-        // Extract OID from token
-        String afterSubToken = token.substring(7);
-        String oid = jwtService.getOidFromToken(afterSubToken);
-        boolean isOwner = board.getOwner().getOid().equals(oid);
-        boolean isCollaborator = collabService.isCollaborator(oid, boardId); // Check if user is a collaborator
-
-        // Check if the user is the owner or a collaborator or if the board is public
-        if (isOwner || isCollaborator || isPublic) {
-            ShowCollabDTO collaborator = collabService.getCollabByOid(boardId, collabOid);
-            return ResponseEntity.ok(collaborator);
-        } else {
-            throw new ForBiddenException("Access denied");
-        }
+        ShowCollabDTO response = collabService.getCollabByOid(boardId, collabOid);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("")
     public ResponseEntity<Object> addCollaborator(
             @PathVariable String boardId,
-            @RequestBody Map<String,String> req,
+            @RequestBody(required = false) AddCollabDTO req,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
-        // Check if the board exists
-        if (!boardService.existsById(boardId)) {
-            throw new ItemNotFoundException("board not found");
+        String accessToken = (token != null && !token.isEmpty()) ? token.substring(7) : null;
+        String userId = (accessToken != null) ? jwtService.getOidFromToken(accessToken) : null;
+
+        BoardDTO board = boardService.getBoardByBoardId(boardId);
+
+        String collaboratorEmail = req.getEmail();
+        if (collaboratorEmail == null || collaboratorEmail.isEmpty()) {
+            throw new AccessDeniedException("Email cannot be empty.");
         }
 
-        // Extract OID from token
-        String afterSubToken = token.substring(7);
-        String oid = jwtService.getOidFromToken(afterSubToken);
-
-        // Check if the user is authorized to add collaborators (owner or collaborator)
-        Board board = boardService.getBoardByBoardId(boardId);
-        boolean isOwner = board.getOwner().getOid().equals(oid);
-        boolean isCollaborator = collabService.isCollaborator(oid, boardId);
-
-        if (!isOwner && !isCollaborator) {
-            throw new ForBiddenException("Access denied");
+        String accessRight = req.getAccessRight();
+        if (accessRight == null || accessRight.isEmpty()) {
+            throw new BadRequestException("Access right cannot be empty.");
         }
 
-        if (!board.getOwner().getOid().equals(oid)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only board owner can add collaborators");
+        if (board.getOwner().getEmail().equalsIgnoreCase(req.getEmail())) {
+            throw new ConflictException("Owner cannot be added as a collaborator.");
         }
 
-        // Add the collaborator
-        ShowCollabDTO newCollaborator = collabService.addCollaborator(boardId, req.get("email"), req.get("access_right"), oid);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newCollaborator);
+        // ตรวจสอบ accessRight
+        AccessRight accessRightEnum = accessRightService.validateAccessRight(req.getAccessRight());
+
+        // ตรวจสอบการเข้าถึง
+        boolean checkAccess = accessControlService.hasAccess(userId, boardId, token, accessRightEnum);
+        if (!checkAccess) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        ShowCollabDTO collaboratorResponse = collabService.addCollaborator(boardId, collaboratorEmail, accessRight);
+
+        BoardWithCollabDTO responseDTO = new BoardWithCollabDTO();
+        responseDTO.setBoardId(board.getId());
+        responseDTO.setBoardName(board.getBoardName());
+
+        ListShowCollabDTO collaborators = collabService.getAllCollab(boardId);
+        responseDTO.setCollaborators(collaborators.getShowCollabDTOS());
+
+        return ResponseEntity.status(201).body(responseDTO);
+
     }
 
 }
