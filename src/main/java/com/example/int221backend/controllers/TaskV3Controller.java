@@ -143,14 +143,17 @@ public class TaskV3Controller {
                 }
             }
 
-            String afterSubToken = token.substring(7);
+            String userId = null;
+            if (token != null && token.startsWith("Bearer ")) {
+                String jwtToken = token.substring(7);
+                userId = jwtService.getOidFromToken(jwtToken);
+            }
 
-            String oid = jwtService.getOidFromToken(afterSubToken);
-
-            BoardDTO board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getUserId().equals(oid);
+            // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
+            boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
+            // ถ้าผู้ใช้ไม่มีสิทธิ์เข้าถึงบอร์ดนี้ ให้ส่ง response ว่า access denied
             if (addTaskDTO == null){
-                if (isOwner){
+                if (hasAccess){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Collections.singletonMap("error", "Access denied, request body required"));
                 }else {
@@ -158,7 +161,7 @@ public class TaskV3Controller {
                             .body(Collections.singletonMap("error", "Access denied, request body required"));
                 }
             }
-            if (isOwner){
+            if (hasAccess){
                 Integer statusId = addTaskDTO.getStatus();
                 AddTaskV2DTO newTask = taskV3Service.addTask(addTaskDTO, statusId, boardId);
 
@@ -181,14 +184,16 @@ public class TaskV3Controller {
                         .body(Collections.singletonMap("error", "Board not found"));
             }
 
-            String afterSubToken = token.substring(7);
+            String userId = null;
+            if (token != null && token.startsWith("Bearer ")) {
+                String jwtToken = token.substring(7);
+                userId = jwtService.getOidFromToken(jwtToken);
+            }
 
-            String oid = jwtService.getOidFromToken(afterSubToken);
+            // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
+            boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
 
-            BoardDTO board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getUserId().equals(oid);
-
-            if (isOwner){
+            if (hasAccess){
                 taskV3Service.deleteTask(id, boardId);
                 return ResponseEntity.ok().build();
             }else {
@@ -221,14 +226,17 @@ public class TaskV3Controller {
                 }
             }
 
-            String afterSubToken = token.substring(7);
+            String userId = null;
+            if (token != null && token.startsWith("Bearer ")) {
+                String jwtToken = token.substring(7);
+                userId = jwtService.getOidFromToken(jwtToken);
+            }
 
-            String oid = jwtService.getOidFromToken(afterSubToken);
-
-            BoardDTO board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getUserId().equals(oid);
+            // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
+            boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
+            System.out.println(hasAccess);
             if (addTaskDTO == null){
-                if (isOwner){
+                if (hasAccess){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Collections.singletonMap("error", "Access denied, request body required"));
                 }else {
@@ -236,7 +244,7 @@ public class TaskV3Controller {
                             .body(Collections.singletonMap("error", "Access denied, request body required"));
                 }
             }
-            if (isOwner){
+            if (hasAccess){
                 Integer status = addTaskDTO.getStatus();
                 TaskV3 editedTask = modelMapper.map(addTaskDTO, TaskV3.class);
 

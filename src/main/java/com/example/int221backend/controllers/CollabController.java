@@ -109,7 +109,7 @@ public class CollabController {
             throw new AccessDeniedException("Access denied");
         }
 
-        ShowCollabDTO collaboratorResponse = collabService.addCollaborator(boardId, collaboratorEmail, accessRight);
+        collabService.addCollaborator(boardId, collaboratorEmail, accessRight);
 
         BoardWithCollabDTO responseDTO = new BoardWithCollabDTO();
         responseDTO.setBoardId(board.getId());
@@ -122,4 +122,75 @@ public class CollabController {
 
     }
 
+    @PatchMapping("/{collabOid}")
+    public ResponseEntity<?> editCollaborator(
+            @PathVariable String boardId,
+            @PathVariable String collabOid,
+            @RequestBody(required = false) AddCollabDTO req,
+            @RequestHeader(value = "Authorization", required = false) String token
+    ){
+        String accessToken = (token != null && !token.isEmpty()) ? token.substring(7) : null;
+        String userId = (accessToken != null) ? jwtService.getOidFromToken(accessToken) : null;
+
+        BoardDTO board = boardService.getBoardByBoardId(boardId);
+        if (board == null){
+            throw new ItemNotFoundException("board is not found!");
+        }
+
+        if (!board.getOwner().getUserId().equals(userId)){
+            throw new ForBiddenException("user should be board owner!");
+        }
+
+        AccessRight accessRightEnum = accessRightService.validateAccessRight(req.getAccessRight());
+        boolean checkAccess = accessControlService.hasAccess(userId, boardId, token, accessRightEnum);
+        if (!checkAccess) {
+            throw new AccessDeniedException("Access denied");
+        }
+
+        String accessRight = req.getAccessRight();
+        if (accessRight == null || accessRight.isEmpty()) {
+            throw new BadRequestException("access right cannot be empty");
+        } else if (!accessRight.equalsIgnoreCase(AccessRight.READ.toString()) && !accessRight.equalsIgnoreCase(AccessRight.WRITE.toString())) {
+            throw new BadRequestException("access right should be READ or WRITE");
+        }
+
+
+        collabService.editCollaborator(boardId,collabOid,accessRight);
+
+        ResponseEditCollabDTO responseEditCollabDTO = new ResponseEditCollabDTO();
+        responseEditCollabDTO.setAccessRight(accessRight);
+
+        return ResponseEntity.ok(responseEditCollabDTO);
+    }
+
+    @DeleteMapping("/{collabOid}")
+    public ResponseEntity<?> deleteCollab(
+            @PathVariable String boardId,
+            @PathVariable String collabOid,
+            @RequestHeader(value = "Authorization", required = false) String token
+    ){
+        String accessToken = (token != null && !token.isEmpty()) ? token.substring(7) : null;
+        String userId = (accessToken != null) ? jwtService.getOidFromToken(accessToken) : null;
+
+        if (userId == null ){
+            throw new AccessDeniedException("token is not valid");
+        }
+
+        BoardDTO board = boardService.getBoardByBoardId(boardId);
+        if (board == null){
+            throw new ItemNotFoundException("board is not found!");
+        }
+
+        if (board.getOwner().getUserId().equals(userId)){
+            collabService.deleteCollab(collabOid,boardId);
+            return ResponseEntity.ok().build();
+        } else {
+            if (userId.equals(collabOid)){
+                collabService.deleteCollab(collabOid,boardId);
+                return ResponseEntity.ok().build();
+            } else {
+                throw new ForBiddenException("user should be owner or delete own self");
+            }
+        }
+    }
 }

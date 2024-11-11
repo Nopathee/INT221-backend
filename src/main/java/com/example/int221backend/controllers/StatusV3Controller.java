@@ -108,7 +108,10 @@ public class StatusV3Controller {
         }
 
         // ถ้ามีสิทธิ์เข้าถึงบอร์ดนี้ ให้ดึงสถานะตาม boardId และ statusId
-        Status statusList = statusService.getStatusById(statusId, boardId);
+        Status status = statusService.getStatusById(statusId, boardId);
+        if (status != null){
+            return ResponseEntity.ok(status);
+        }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied! You are not the owner of this private board.");
     }
 
@@ -121,13 +124,17 @@ public class StatusV3Controller {
         }
 
         try {
-            String afterSubToken = token.substring(7);
-            String oid = jwtService.getOidFromToken(afterSubToken);
-            BoardDTO board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getUserId().equals(oid);
+            String userId = null;
+            if (token != null && token.startsWith("Bearer ")) {
+                String jwtToken = token.substring(7);
+                userId = jwtService.getOidFromToken(jwtToken);
+            }
+
+            // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
+            boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
 
             if (statusDTO == null || statusDTO.getName() == null) {
-                if (isOwner){
+                if (hasAccess){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Collections.singletonMap("error", "Access denied, request body required"));
                 }else {
@@ -137,7 +144,7 @@ public class StatusV3Controller {
 
             }
 
-            if (!isOwner) {
+            if (!hasAccess) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Collections.singletonMap("error", "Access denied to private board"));
             }
@@ -162,12 +169,16 @@ public class StatusV3Controller {
 
 
         try {
-            String afterSubToken = token.substring(7);
-            String oid = jwtService.getOidFromToken(afterSubToken);
-            BoardDTO board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getUserId().equals(oid);
+            String userId = null;
+            if (token != null && token.startsWith("Bearer ")) {
+                String jwtToken = token.substring(7);
+                userId = jwtService.getOidFromToken(jwtToken);
+            }
+
+            // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
+            boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
             if (statusDTO == null || statusDTO.getName() == null) {
-                if (isOwner){
+                if (hasAccess){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Collections.singletonMap("error", "Access denied, request body required"));
                 }else {
@@ -175,7 +186,7 @@ public class StatusV3Controller {
                             .body(Collections.singletonMap("error", "Access denied, request body required"));
                 }
             }
-            if (!isOwner) {
+            if (!hasAccess) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(Collections.singletonMap("error", "Access denied to private board"));
             }
@@ -196,14 +207,16 @@ public class StatusV3Controller {
         }
         try {
 
-            String afterSubToken = token.substring(7);
+            String userId = null;
+            if (token != null && token.startsWith("Bearer ")) {
+                String jwtToken = token.substring(7);
+                userId = jwtService.getOidFromToken(jwtToken);
+            }
 
-            String oid = jwtService.getOidFromToken(afterSubToken);
+            // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
+            boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
 
-            BoardDTO board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getUserId().equals(oid);
-
-            if (isOwner) {
+            if (hasAccess) {
                 statusService.deleteStatus(statusId);
                 return ResponseEntity.ok().build();
             } else {
@@ -226,14 +239,16 @@ public class StatusV3Controller {
 
         try {
 
-            String afterSubToken = token.substring(7);
+            String userId = null;
+            if (token != null && token.startsWith("Bearer ")) {
+                String jwtToken = token.substring(7);
+                userId = jwtService.getOidFromToken(jwtToken);
+            }
 
-            String oid = jwtService.getOidFromToken(afterSubToken);
+            // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
+            boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
 
-            BoardDTO board = boardService.getBoardByBoardId(boardId);
-            boolean isOwner = board.getOwner().getUserId().equals(oid);
-
-            if (isOwner) {
+            if (hasAccess) {
                 statusService.deleteAndTranStatus(id, newId);
                 return ResponseEntity.ok().build();
             } else {

@@ -117,6 +117,35 @@ public class CollabService {
         );
     }
 
+    public ShowCollabDTO editCollaborator(String boardId, String oid , String accessRight){
+        Collaborators collaborators = collabRepository.findByUser_OidAndBoard_BoardId(oid,boardId);
+
+        if (collaborators == null){
+            throw new ItemNotFoundException("collaborator not found!");
+        }
+
+        collaborators.setAccessRight(AccessRight.valueOf(accessRight.toUpperCase()));
+
+        collabRepository.save(collaborators);
+
+        return new ShowCollabDTO(
+                collaborators.getUser().getOid(),
+                collaborators.getUser().getName(),
+                collaborators.getUser().getEmail(),
+                collaborators.getAccessRight(),
+                collaborators.getAddedOn()
+        );
+    }
+
+    public void deleteCollab(String oid,String boardId){
+        Collaborators collaborators = collabRepository.findByUser_OidAndBoard_BoardId(oid, boardId);
+        if (collaborators == null){
+            throw new ItemNotFoundException("this user is not board collaborators");
+        }
+
+        collabRepository.delete(collaborators);
+    }
+
     public boolean isCollaborator(String email, String boardId) {
 
         Collaborators collaborator = collabRepository.findByBoardIdAndUserEmail(boardId, email);
