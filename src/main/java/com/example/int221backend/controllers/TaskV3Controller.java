@@ -75,8 +75,33 @@ public class TaskV3Controller {
             throw new AccessDeniedException("Access Denied!");
         }
 
-        List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses,boardId);
-        return ResponseEntity.ok(tasks);
+        List<TaskV3> tasks = taskV3Service.getAllTask(filterStatuses, boardId);
+
+        List<AddTaskV2DTO> taskV2DTOList = tasks.stream()
+                .map(task -> {
+                    AddStatusV3DTO statusDto = new AddStatusV3DTO();
+                    Status status = task.getStatus();  // Assuming `TaskV3` has a `Status` field
+
+                    if (status != null) {
+                        statusDto.setId(status.getId());
+                        statusDto.setName(status.getName());
+                        statusDto.setDescription(status.getDescription());
+                        statusDto.setBId(status.getBoard().getBoardId());
+                        statusDto.setColor(status.getColor());
+                    }
+
+                    AddTaskV2DTO addTaskV2DTO= new AddTaskV2DTO();
+                    addTaskV2DTO.setId(task.getId());
+                    addTaskV2DTO.setTitle(task.getTitle());
+                    addTaskV2DTO.setDescription(task.getDescription());
+                    addTaskV2DTO.setAssignees(task.getAssignees());
+                    addTaskV2DTO.setStatus(statusDto);
+
+                    return addTaskV2DTO;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(taskV2DTOList);
     }
 
 
