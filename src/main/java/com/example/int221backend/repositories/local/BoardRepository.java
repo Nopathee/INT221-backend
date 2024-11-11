@@ -19,5 +19,4 @@ public interface BoardRepository extends JpaRepository<Board,String> {
 
      List<Board> findAllByOwner_Oid(String oid);
 
-
 }

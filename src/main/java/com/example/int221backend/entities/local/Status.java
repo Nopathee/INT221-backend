@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,8 +25,12 @@ public class Status {
 
     @Column(name = "color", length = 30)
     private String color;
+
     @ManyToOne
     @JoinColumn(name = "board_id", nullable = false)
     private Board board;
+
+    @OneToMany(mappedBy = "status")
+    private List<TaskV3> tasks;
 
 }

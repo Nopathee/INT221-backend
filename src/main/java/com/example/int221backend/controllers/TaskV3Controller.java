@@ -60,7 +60,7 @@ public class TaskV3Controller {
 
         BoardDTO board = boardService.getBoardByBoardId(boardId);
         if (board == null){
-            throw new ItemNotFoundException("board not found");
+            throw new ItemNotFoundException("board not found!!!!");
         }
 
         String oId = null;
@@ -117,11 +117,6 @@ public class TaskV3Controller {
 
     @PostMapping("")
     public ResponseEntity<?> addTask(@PathVariable String boardId, @RequestBody(required = false) AddTaskDTO addTaskDTO ,@RequestHeader("Authorization") String token) {
-        try {
-            if (!boardService.existsById(boardId)) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Collections.singletonMap("error", "Board not found"));
-            }
 
             if (addTaskDTO != null){
                 if (addTaskDTO.getTitle() != null) {
@@ -170,10 +165,6 @@ public class TaskV3Controller {
                 throw new ForBiddenException("Access denies");
             }
 
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .body(Collections.singletonMap("error", e.getReason()));
-        }
     }
 
     @DeleteMapping("/{id}")

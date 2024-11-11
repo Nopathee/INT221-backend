@@ -23,8 +23,9 @@ public class AccessControlService {
     private AccessRightService accessRightService;
 
     public boolean hasAccess(String userId, String boardId, String token, AccessRight requiredAccess) {
+        System.out.println(boardId);
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new ItemNotFoundException("Board not found"));
+                .orElseThrow(() -> new ItemNotFoundException("Board not found!!"));
 
         boolean isOwner = board.getOwner().getOid().equals(userId);
         boolean isPrivate = board.getVisibility() == BoardVisi.PRIVATE;

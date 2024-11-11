@@ -31,7 +31,7 @@ public class Board {
     @Column(name = "board_name", nullable = false, length = 100)
     private String name;
 
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Status> statuses;
 
     @OneToMany(mappedBy = "board")

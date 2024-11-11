@@ -1,5 +1,6 @@
 package com.example.int221backend.entities.local;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +27,7 @@ public class TaskV2 {
     private String assignees;
 
     @ManyToOne
-    @JoinColumn(name = "task_status_id")
+    @JoinColumn(name = "task_status_id", nullable = false)
     private Status status;
 
     @Column(name = "created_on", updatable = false, insertable = false)

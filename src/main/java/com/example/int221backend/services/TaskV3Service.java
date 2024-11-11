@@ -33,11 +33,12 @@ public class TaskV3Service {
     private TaskV3Repository taskV3Repository;
 
     @Autowired
-    private StatusRepository statusRepository;
+    private StatusV3Service statusV3Service;
 
     @Autowired
     private BoardRepository boardRepository;
 
+    @Transactional("projectManagementTransactionManager")
     public List<TaskV3> getAllTask(Set<String> filterStatuses,String boardId) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board id" + boardId + "does not exist"));
@@ -51,11 +52,12 @@ public class TaskV3Service {
         }
     }
 
+    @Transactional("projectManagementTransactionManager")
     public TaskV3 getTaskById(String id, String boardId) {
         TaskV3 taskV3 = taskV3Repository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("Task not found"));
         if (!taskV3.getBoard().getBoardId().equals(boardId)){
-            throw new ItemNotFoundException("Board not found");
+            throw new ItemNotFoundException("Board not found!");
         }
 
         return taskV3;
@@ -81,13 +83,15 @@ public class TaskV3Service {
             errorMessage.append("Assignees size must be between 0 and 30. ");
         }
 
-        if (errorMessage.length() > 0) {
+        if (!errorMessage.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, errorMessage.toString());
         }
 
         final Integer finalStatusId = (statusId == null) ? 1 : statusId;
-        Status status = statusRepository.findById(finalStatusId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status ID " + finalStatusId + " Does Not EXIST!!!"));
+        Status status = statusV3Service.getStatusById(finalStatusId,boardId);
+        if (status == null){
+            throw new ItemNotFoundException("this status id not found!");
+        }
 
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board ID " + boardId + " does not exist"));
@@ -137,8 +141,10 @@ public class TaskV3Service {
 
         final Integer finalStatusId = statusId == null ? 1 : statusId;
 
-        Status status = statusRepository.findById(finalStatusId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"Status not found"));
+        Status status = statusV3Service.getStatusById(finalStatusId,boardId);
+        if (status == null){
+            throw new ItemNotFoundException("this status is not found");
+        }
 
         TaskV3 existingTask = taskV3Repository.findById(taskId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Task not found"));

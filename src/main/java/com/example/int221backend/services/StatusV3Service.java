@@ -69,7 +69,7 @@ public class StatusV3Service {
         Status status = statusV3Repository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("status not found"));
         if (!status.getBoard().getBoardId().equals(boardId)){
-            throw new ItemNotFoundException("Board not found");
+            throw new ItemNotFoundException("this status not in this board");
         }
         return status;
     }
