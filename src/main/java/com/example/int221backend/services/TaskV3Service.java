@@ -54,8 +54,12 @@ public class TaskV3Service {
 
     @Transactional("projectManagementTransactionManager")
     public TaskV3 getTaskById(String id, String boardId) {
+        System.out.println(id);
         TaskV3 taskV3 = taskV3Repository.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("Task not found"));
+
+        System.out.println(taskV3);
+
         if (!taskV3.getBoard().getBoardId().equals(boardId)){
             throw new ItemNotFoundException("Board not found!");
         }

@@ -130,12 +130,28 @@ public class TaskV3Controller {
             throw new AccessDeniedException("Access denied!!");
         }
 
-        TaskV3 task = taskV3Service.getTaskById(boardId, id);
+        TaskV3 task = taskV3Service.getTaskById(id, boardId);
         if (task == null) {
             throw new ItemNotFoundException("Task not found !!!");
         }
 
-        return ResponseEntity.ok(task);
+        AddTaskV2DTO showTask = new AddTaskV2DTO();
+        AddStatusV3DTO showStatus = new AddStatusV3DTO();
+        Status status = task.getStatus();
+        if (status != null) {
+            showStatus.setId(status.getId());
+            showStatus.setName(status.getName());
+            showStatus.setDescription(status.getDescription());
+            showStatus.setBId(status.getBoard().getBoardId());
+            showStatus.setColor(status.getColor());
+        }
+        showTask.setId(task.getId());
+        showTask.setTitle(task.getTitle());
+        showTask.setDescription(task.getDescription());
+        showTask.setAssignees(task.getAssignees());
+        showTask.setStatus(showStatus);
+
+        return ResponseEntity.ok(showTask);
     }
 
 
