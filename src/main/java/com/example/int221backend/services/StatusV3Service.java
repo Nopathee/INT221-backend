@@ -123,6 +123,7 @@ public class StatusV3Service {
 
         existingStatus.setName(status.getName().trim());
         existingStatus.setDescription(status.getDescription() != null ? status.getDescription() : null);
+        existingStatus.setColor(status.getColor() != null ? status.getColor() : "#fffff");
 
         return statusV3Repository.save(existingStatus);
     }

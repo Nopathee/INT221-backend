@@ -117,7 +117,11 @@ public class StatusV3Controller {
 
 
     @PostMapping("")
-    public ResponseEntity<?> addStatus(@PathVariable String boardId, @RequestBody(required = false) AddStatusDTO statusDTO, @RequestHeader("Authorization") String token) {
+    public ResponseEntity<?> addStatus(
+            @PathVariable String boardId,
+            @RequestBody(required = false) AddStatusDTO statusDTO,
+            @RequestHeader("Authorization") String token
+    ) {
         if (!boardService.existsById(boardId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Collections.singletonMap("error", "Board not found"));
