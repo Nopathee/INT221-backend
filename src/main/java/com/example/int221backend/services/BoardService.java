@@ -144,8 +144,8 @@ public class BoardService {
     public BoardDTO getBoardByBoardId(String boardId) {
         Optional<Board> optionalBoard = boardRepository.findById(boardId);
 
-        if (optionalBoard.isPresent()){
-            throw new ItemNotFoundException("Board not found!");
+        if (!optionalBoard.isPresent()){
+            throw new ItemNotFoundException("Board not found! @ is present");
         }
 
         Board board = optionalBoard.get();

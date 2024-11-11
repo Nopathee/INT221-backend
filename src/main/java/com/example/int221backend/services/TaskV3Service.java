@@ -87,7 +87,7 @@ public class TaskV3Service {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, errorMessage.toString());
         }
 
-        final Integer finalStatusId = (statusId == null) ? 1 : statusId;
+        final Integer finalStatusId = (statusId == null) ? statusV3Service.getDefaultStatus(boardId).getId() : statusId;
         Status status = statusV3Service.getStatusById(finalStatusId,boardId);
         if (status == null){
             throw new ItemNotFoundException("this status id not found!");

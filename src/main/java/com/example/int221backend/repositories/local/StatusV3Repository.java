@@ -22,4 +22,7 @@ public interface StatusV3Repository extends JpaRepository<Status, Integer> {
     @Query("SELECT s FROM Status s WHERE s.id = :statusId AND s.board.boardId = :boardId")
     Status findStatusByIdAndBoard(Integer statusId, String boardId);
 
+    @Query("SELECT s FROM Status s WHERE s.board.boardId = :boardId AND s.name = :statusName")
+    Status findDefaultStatus(String boardId,String statusName);
+
 }

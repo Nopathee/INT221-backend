@@ -204,4 +204,7 @@ public class StatusV3Service {
         return statusV3Repository.findByBoardAndId(board, statusId) != null;
     }
 
+    public Status getDefaultStatus(String boardId){
+        return statusV3Repository.findDefaultStatus(boardId,"No Status");
+    }
 }
