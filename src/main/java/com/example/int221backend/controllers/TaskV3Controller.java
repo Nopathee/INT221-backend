@@ -159,7 +159,7 @@ public class TaskV3Controller {
             if (hasAccess){
                 Integer statusId = addTaskDTO.getStatus();
                 AddTaskV2DTO newTask = taskV3Service.addTask(addTaskDTO, statusId, boardId);
-
+                newTask.getStatus().setBId(boardId);
                 return new ResponseEntity<>(newTask, HttpStatus.CREATED);
             }else {
                 throw new ForBiddenException("Access denies");

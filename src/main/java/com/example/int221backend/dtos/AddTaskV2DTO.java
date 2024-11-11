@@ -13,5 +13,5 @@ public class AddTaskV2DTO {
     private String title;
     private String description;
     private String assignees;
-    private Status status;
+    private AddStatusV3DTO status;
 }
