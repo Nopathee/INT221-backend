@@ -10,6 +10,7 @@ import com.example.int221backend.entities.local.UserLocal;
 import com.example.int221backend.entities.shared.User;
 import com.example.int221backend.exception.BadRequestException;
 import com.example.int221backend.exception.ConflictException;
+import com.example.int221backend.exception.ForBiddenException;
 import com.example.int221backend.exception.ItemNotFoundException;
 import com.example.int221backend.repositories.local.BoardRepository;
 import com.example.int221backend.repositories.local.CollabRepository;
@@ -139,8 +140,25 @@ public class CollabService {
 
     public void deleteCollab(String oid,String boardId){
         Collaborators collaborators = collabRepository.findByUser_OidAndBoard_BoardId(oid, boardId);
+        UserLocal user = userLocalRepository.findByOid(oid).orElseThrow(() -> new ItemNotFoundException("this user id is not found!"));
+
         if (collaborators == null){
             throw new ItemNotFoundException("this user is not board collaborators");
+        }
+
+        collabRepository.delete(collaborators);
+    }
+
+    public void leaveCollab(String oid, String boardId){
+        Collaborators collaborators = collabRepository.findByUser_OidAndBoard_BoardId(oid, boardId);
+        UserLocal user = userLocalRepository.findByOid(oid).orElseThrow(() -> new ItemNotFoundException("this user id is not found!"));
+
+        if (collaborators == null){
+            if(!isCollaborator(user.getEmail(),boardId)){
+                throw new ForBiddenException("this user is not collaborator");
+            }else {
+                throw new ItemNotFoundException("this user is not board collaborators");
+            }
         }
 
         collabRepository.delete(collaborators);

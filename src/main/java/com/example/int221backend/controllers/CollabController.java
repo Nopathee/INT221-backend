@@ -186,7 +186,7 @@ public class CollabController {
             return ResponseEntity.ok().build();
         } else {
             if (userId.equals(collabOid)){
-                collabService.deleteCollab(collabOid,boardId);
+                collabService.leaveCollab(collabOid,boardId);
                 return ResponseEntity.ok().build();
             } else {
                 throw new ForBiddenException("user should be owner or delete own self");

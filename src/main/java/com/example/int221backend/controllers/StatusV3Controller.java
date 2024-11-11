@@ -177,7 +177,7 @@ public class StatusV3Controller {
 
             // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
             boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
-            if (statusDTO == null || statusDTO.getName() == null) {
+            if ((statusDTO == null || statusDTO.getName() == null) && statusService.getStatusById(statusId,boardId) != null) {
                 if (hasAccess){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Collections.singletonMap("error", "Access denied, request body required"));

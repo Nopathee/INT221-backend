@@ -66,9 +66,10 @@ public class StatusV3Service {
 
     @Transactional("projectManagementTransactionManager")
     public Status getStatusById(Integer id, String boardId) {
-        Status status = statusV3Repository.findStatusByIdAndBoard(id, boardId);
-        if (status == null) {
-            throw new ItemNotFoundException("Status " + id + "is not found!, please try again.");
+        Status status = statusV3Repository.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException("status not found"));
+        if (!status.getBoard().getBoardId().equals(boardId)){
+            throw new ItemNotFoundException("Board not found");
         }
         return status;
     }

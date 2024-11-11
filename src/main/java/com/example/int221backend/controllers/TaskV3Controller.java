@@ -235,7 +235,7 @@ public class TaskV3Controller {
             // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
             boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
             System.out.println(hasAccess);
-            if (addTaskDTO == null){
+            if (addTaskDTO == null && taskV3Service.getTaskById(id,boardId) != null){
                 if (hasAccess){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(Collections.singletonMap("error", "Access denied, request body required"));
