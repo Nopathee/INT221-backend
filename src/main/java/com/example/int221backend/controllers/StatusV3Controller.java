@@ -1,9 +1,6 @@
 package com.example.int221backend.controllers;
 
-import com.example.int221backend.dtos.AddStatusDTO;
-import com.example.int221backend.dtos.BoardDTO;
-import com.example.int221backend.dtos.BoardIdDTO;
-import com.example.int221backend.dtos.StatusAndTaskCDTO;
+import com.example.int221backend.dtos.*;
 import com.example.int221backend.entities.AccessRight;
 import com.example.int221backend.entities.BoardVisi;
 import com.example.int221backend.entities.local.Board;
@@ -110,7 +107,13 @@ public class StatusV3Controller {
         // ถ้ามีสิทธิ์เข้าถึงบอร์ดนี้ ให้ดึงสถานะตาม boardId และ statusId
         Status status = statusService.getStatusById(statusId, boardId);
         if (status != null){
-            return ResponseEntity.ok(status);
+            AddStatusV3DTO showStatus = new AddStatusV3DTO();
+            showStatus.setId(status.getId());
+            showStatus.setName(status.getName());
+            showStatus.setDescription(status.getDescription());
+            showStatus.setColor(status.getColor());
+            showStatus.setBId(status.getBoard().getBoardId());
+            return ResponseEntity.ok(showStatus);
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied! You are not the owner of this private board.");
     }
