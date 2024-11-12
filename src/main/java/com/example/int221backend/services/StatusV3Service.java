@@ -208,4 +208,5 @@ public class StatusV3Service {
     public Status getDefaultStatus(String boardId){
         return statusV3Repository.findDefaultStatus(boardId,"No Status");
     }
+
 }

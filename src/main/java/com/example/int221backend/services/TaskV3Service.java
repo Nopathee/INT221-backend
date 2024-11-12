@@ -151,7 +151,7 @@ public class TaskV3Service {
         }
 
         TaskV3 existingTask = taskV3Repository.findById(taskId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Task not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Task not found @ service"));
 
         if (!existingTask.getBoard().getBoardId().equals(boardId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found in the specified board.");
@@ -168,6 +168,13 @@ public class TaskV3Service {
 
         TaskV3 updatedTask = taskV3Repository.saveAndFlush(existingTask);
         return modelMapper.map(updatedTask, AddTaskV2DTO.class);
+    }
+
+    public boolean existingTask(String taskId,String boardId){
+        Board board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new ItemNotFoundException("Board not found!"));
+
+        return taskV3Repository.findByBoardAndId(board,taskId) != null;
     }
 
 }

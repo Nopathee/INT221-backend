@@ -5,8 +5,10 @@ import com.example.int221backend.entities.AccessRight;
 import com.example.int221backend.entities.BoardVisi;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
+import com.example.int221backend.exception.BadRequestException;
 import com.example.int221backend.exception.ForBiddenException;
 import com.example.int221backend.exception.ItemNotFoundException;
+import com.example.int221backend.repositories.local.StatusV3Repository;
 import com.example.int221backend.services.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,9 @@ public class StatusV3Controller {
 
     @Autowired
     private AccessControlService accessControlService;
+
+    @Autowired
+    private StatusV3Repository statusV3Repository;
 
     @GetMapping("")
     public ResponseEntity<Object> getAllStatuses(
@@ -173,37 +178,35 @@ public class StatusV3Controller {
         }
 
         // Check if the request body is null or empty
-
-
-        try {
-            String userId = null;
-            if (token != null && token.startsWith("Bearer ")) {
-                String jwtToken = token.substring(7);
-                userId = jwtService.getOidFromToken(jwtToken);
-            }
+        String userId = null;
+        if (token != null && token.startsWith("Bearer ")) {
+            String jwtToken = token.substring(7);
+            userId = jwtService.getOidFromToken(jwtToken);
+        }
 
             // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
-            boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
-            if ((statusDTO == null || statusDTO.getName() == null) && statusService.getStatusById(statusId,boardId) != null) {
-                if (hasAccess){
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Collections.singletonMap("error", "Access denied, request body required"));
-                }else {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                            .body(Collections.singletonMap("error", "Access denied, request body required"));
-                }
-            }
-            if (!hasAccess) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Collections.singletonMap("error", "Access denied to private board"));
-            }
+        boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
 
+        if ((statusDTO == null || statusDTO.getName() == null)) {
+
+            if (!hasAccess) {
+                throw new ForBiddenException("Access denied, request body required");
+
+            }else if (!statusService.existsStatusInBoard(boardId,statusId)){
+                    throw new ItemNotFoundException("Status not found");
+            } else {
+                throw new BadRequestException("Access denied, request body required");
+            }
+        }
+        if (!hasAccess) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "Access denied to private board"));
+        }else {
             Status updatedStatus = statusService.editStatus(modelMapper.map(statusDTO, Status.class), statusId);
             return ResponseEntity.ok(modelMapper.map(updatedStatus, AddStatusDTO.class));
-        } catch (ResponseStatusException e) {
-            return ResponseEntity.status(e.getStatusCode())
-                    .body(Collections.singletonMap("error", e.getReason()));
         }
+
+
     }
 
     @DeleteMapping("/{statusId}")

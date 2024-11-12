@@ -6,8 +6,10 @@ import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
 import com.example.int221backend.entities.local.TaskV3;
 import com.example.int221backend.exception.AccessDeniedException;
+import com.example.int221backend.exception.BadRequestException;
 import com.example.int221backend.exception.ForBiddenException;
 import com.example.int221backend.exception.ItemNotFoundException;
+import com.example.int221backend.repositories.local.TaskV3Repository;
 import com.example.int221backend.services.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -266,17 +268,17 @@ public class TaskV3Controller {
 
             // ตรวจสอบสิทธิ์การเข้าถึงบอร์ดโดยใช้ AccessControlService
             boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
-            System.out.println(hasAccess);
-            if (addTaskDTO == null && taskV3Service.getTaskById(id,boardId) != null){
-                if (hasAccess){
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Collections.singletonMap("error", "Access denied, request body required"));
-                }else {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                            .body(Collections.singletonMap("error", "Access denied, request body required"));
+            if (addTaskDTO == null){
+                if (!hasAccess){
+                    throw new ForBiddenException("Access denied, request body required");
+                } else if (!taskV3Service.existingTask(id,boardId)) {
+                    throw new ItemNotFoundException("task not found!");
+                } else {
+                    throw new BadRequestException("Access denied, request body required");
                 }
             }
             if (hasAccess){
+                assert addTaskDTO != null;
                 Integer status = addTaskDTO.getStatus();
                 TaskV3 editedTask = modelMapper.map(addTaskDTO, TaskV3.class);
 
