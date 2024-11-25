@@ -116,13 +116,22 @@ public class JwtService implements Serializable {
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
-    public String generateTokenWithClaims(Claims claims) {
+    public String generateTokenWithClaims(User userInfo) {
         Map<String, Object> tokenClaims = new HashMap<>();
-        tokenClaims.put("sub", claims.getSubject());
-        tokenClaims.put("oid", claims.get("oid"));
-        tokenClaims.put("iss", claims.getIssuer());
-        tokenClaims.put("email", claims.get("email"));
-        return doGenerateToken(tokenClaims);
+        tokenClaims.put("sub", userInfo.getUsername());
+        tokenClaims.put("oid", userInfo.getOid());
+        tokenClaims.put("name", userInfo.getName());
+        tokenClaims.put("email", userInfo.getEmail());
+        tokenClaims.put("role", userInfo.getRole());
+
+        return Jwts.builder()
+                .setHeaderParam("typ", "JWT")
+                .setClaims(tokenClaims)
+                .setIssuer("https://intproj23.sit.kmutt.ac.th/ssi3/")
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
+                .signWith(signatureAlgorithm, SECRET_KEY)
+                .compact();
     }
 
 }
