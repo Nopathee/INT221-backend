@@ -82,25 +82,25 @@ public class UserController {
     }
 
     @PostMapping("/token")
-    public ResponseEntity<Object> refreshToken(@RequestHeader(value = "Authorization", required = false) String reToken){
+    public ResponseEntity<Object> refreshToken(@RequestHeader(value = "Authorization", required = false) String refreshToken) {
         try {
-            if (reToken == null || !reToken.startsWith("Bearer ")){
-                throw new NotCreatedException("Refresh token is invalid!");
+            if (refreshToken == null || !refreshToken.startsWith("Bearer ")) {
+                throw new NotCreatedException("Refresh token is missing or invalid.");
             }
 
-            String token = reToken.substring(7);
+            String token = refreshToken.substring(7);
 
             Claims claims = jwtService.getAllClaimsFromToken(token);
 
-            if (claims.getExpiration().before(new Date())){
-                throw new NotCreatedException("Refresh token has expired!");
+            if (claims.getExpiration().before(new Date())) {
+                throw new NotCreatedException("Refresh token has expired.");
             }
 
             String oid = claims.get("oid", String.class);
             User user = jwtUserDetailsService.getUserByOid(oid);
 
-            if (user == null){
-                throw new ItemNotFoundException("User not found");
+            if (user == null) {
+                throw new ItemNotFoundException("User not found.");
             }
 
             String accessToken = jwtService.generateTokenWithClaims(user);

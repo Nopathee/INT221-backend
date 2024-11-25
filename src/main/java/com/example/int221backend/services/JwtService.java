@@ -4,29 +4,29 @@ import com.example.int221backend.entities.shared.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.lang.Function;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
+import java.security.SignatureException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 @Component
 public class JwtService implements Serializable {
 
     @Value("${jwt.secret}")
     private String SECRET_KEY;
+    SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
 
-    private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
+    @Value("#{${jwt.max-token-interval-hour}*60*60*1000}")
+    private int JWT_TOKEN_VALIDITY;
 
-    @Value("#{60*30*1000}")
-    private long JWT_TOKEN_VALIDITY;
-
-    @Value("#{24*60*60*1000}")
-    private long JWT_REFRESH_TOKEN_VALIDITY;
+    @Value("#{${jwt.refresh-token-interval-hour}*60*60*1000}")
+    private int JWT_REFRESH_TOKEN_VALIDITY;
 
     // Extract username from token
     public String getUsernameFromToken(String token) {
@@ -50,12 +50,11 @@ public class JwtService implements Serializable {
 
     // Extract all claims from token
     public Claims getAllClaimsFromToken(String token) {
-        Claims claims = Jwts.parser()
+        return Jwts.parser()
                 .setSigningKey(SECRET_KEY)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        return claims;
     }
 
     // Check if the token is expired
@@ -63,7 +62,6 @@ public class JwtService implements Serializable {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(new Date());
     }
-
 
     // Generate a new token
     public String generateToken(User userInfo) {
@@ -74,27 +72,6 @@ public class JwtService implements Serializable {
         claims.put("email", userInfo.getEmail());
         claims.put("role", userInfo.getRole());
         return doGenerateToken(claims);
-    }
-
-    public String generateRefreshToken(User userInfo){
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("name", userInfo.getName());
-        claims.put("oid", userInfo.getOid());
-        claims.put("email", userInfo.getEmail());
-        claims.put("role", userInfo.getRole());
-        return doGenerateRefreshToken(claims, userInfo.getUsername());
-    }
-
-    public String doGenerateRefreshToken(Map<String, Object> claims, String subject ){
-        return Jwts.builder()
-                .setHeaderParam("typ","JWT")
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuer("https://intproj23.sit.kmutt.ac.th/ssi3/")
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_REFRESH_TOKEN_VALIDITY))
-                .signWith(signatureAlgorithm, SECRET_KEY)
-                .compact();
     }
 
     // Create the token with claims and subject
@@ -110,10 +87,28 @@ public class JwtService implements Serializable {
                 .compact();
     }
 
+    public String generateRefreshToken(User userInfo){
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("oid", userInfo.getOid());
+
+        return doGenerateRefreshToken(claims);
+    }
+
+    public String doGenerateRefreshToken(Map<String, Object> claims){
+        return Jwts.builder()
+                .setHeaderParam("typ","JWT")
+                .setClaims(claims)
+                .setIssuer("https://intproj23.sit.kmutt.ac.th/ssi3/")
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_REFRESH_TOKEN_VALIDITY))
+                .signWith(signatureAlgorithm, SECRET_KEY)
+                .compact();
+    }
+
     // Validate the token
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return (username != null && username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
     public String generateTokenWithClaims(User userInfo) {

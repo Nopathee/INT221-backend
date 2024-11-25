@@ -36,7 +36,7 @@ public class WebSecurityConfig {
         httpSecurity
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/decode-token").permitAll()
+                        .requestMatchers("/login", "/decode-token","/token").permitAll()
                         .requestMatchers(HttpMethod.GET, "/v3/**").permitAll()
                         .requestMatchers("/v2/**").authenticated()
                         .requestMatchers("/v3/**").authenticated()

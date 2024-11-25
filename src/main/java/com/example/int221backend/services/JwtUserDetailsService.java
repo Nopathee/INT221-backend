@@ -44,7 +44,7 @@ public class JwtUserDetailsService implements UserDetailsService {
         return new AuthUser(user.getUsername(), user.getPassword());
     }
     public User getUserByOid(String oid) {
-        Optional<User> userOptional = userRepository.findById(oid);
+        Optional<User> userOptional = userRepository.findByOid(oid);
 
         if (userOptional.isPresent()) {
             return userOptional.get();
