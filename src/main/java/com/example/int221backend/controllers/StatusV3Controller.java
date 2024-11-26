@@ -259,7 +259,7 @@ public class StatusV3Controller {
             boolean hasAccess = accessControlService.hasAccess(userId, boardId, token, AccessRight.WRITE);
 
             if (hasAccess) {
-                statusService.deleteAndTranStatus(id, newId,boardId);
+                statusService.deleteAndTranStatus(id, newId, boardId);
                 return ResponseEntity.ok().build();
             } else {
                 throw new ForBiddenException("Access denies");

@@ -174,29 +174,40 @@ public class StatusV3Service {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Destination status for task transfer must be different from current status");
         }
 
-        Status status = statusV3Repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
+        Status status = statusV3Repository.findStatusByIdAndBoard(id,boardId);
 
-        Status newStatus = statusV3Repository.findById(newId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + newId + " DOES NOT EXIST!!!"));
+        Status newStatus = statusV3Repository.findStatusByIdAndBoard(newId,boardId);
+
+        if (status == null || newStatus == null){
+            throw new ItemNotFoundException("Status to delete or destination status is not found");
+        }
+        System.out.println(newStatus.getId());
+        System.out.println(status.getId());
 
         if (status.getName().equals("No Status") || status.getName().equals("Done")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, status.getName() + " Cannot Be deleted");
         }
 
-        if (newStatus.getName().equals("No Status") || newStatus.getName().equals("Done")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, newStatus.getName() + " Cannot Be updated");
-        }
+//        if (newStatus.getName().equals("No Status") || newStatus.getName().equals("Done")) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, newStatus.getName() + " Cannot Be updated");
+//        }
 
-        if (!taskV3Repository.findByStatusId(id).isEmpty()) {
-            List<TaskV3> tasks = taskV3Repository.findByStatusId(id);
+        if (!taskV3Repository.findTaskByStatusAndBoard(id,boardId).isEmpty()) {
+            List<TaskV3> tasks = taskV3Repository.findTaskByStatusAndBoard(id,boardId);
+
+            System.out.println(tasks);
+
             tasks.forEach(task -> {
                 task.setStatus(newStatus);
-                taskV3Repository.save(task);
+
             });
+
+            taskV3Repository.saveAll(tasks);
         }
 
-        statusV3Repository.deleteByIdAndBoardId(status.getId(), boardId);
+        System.out.println(statusV3Repository.findById(id));
+
+        deleteStatus(id,boardId);
     }
     @Transactional("projectManagementTransactionManager")
     public boolean existsStatusInBoard(String boardId, Integer statusId) {

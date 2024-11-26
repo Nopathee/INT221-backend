@@ -1,6 +1,7 @@
 package com.example.int221backend.repositories.local;
 
 
+import com.example.int221backend.entities.Task;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.TaskV3;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,6 +22,9 @@ public interface TaskV3Repository extends JpaRepository<TaskV3, String> {
     List<Object[]> countTasksByStatusForBoard(@Param("boardId") String boardId);
 
     TaskV3 findByBoardAndId(Board board, String id);
+
+    @Query("SELECT t FROM TaskV3 t WHERE t.status.id = :statusId AND t.board.boardId = :boardId")
+    List<TaskV3> findTaskByStatusAndBoard(Integer statusId, String boardId);
 
 }
 
