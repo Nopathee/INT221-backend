@@ -152,23 +152,24 @@ public class StatusV3Service {
     }
 
     @Transactional("projectManagementTransactionManager")
-    public void deleteStatus(Integer id) {
+    public void deleteStatus(Integer id,String boardId) {
+
         Status status = statusV3Repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "STATUS ID " + id + " DOES NOT EXIST!!!"));
 
         if (status.getName().equals("No Status") || status.getName().equals("Done")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, status.getName() + " Cannot Be deleted");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, status.getName() + " Cannot Be deleted");
         }
 
         if (!taskV3Repository.findByStatusId(id).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete status with existing tasks");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot delete status with existing tasks");
         }
 
-        statusV3Repository.delete(status);
+        statusV3Repository.deleteByIdAndBoardId(id,boardId);
     }
 
     @Transactional("projectManagementTransactionManager")
-    public void deleteAndTranStatus(Integer id, Integer newId) {
+    public void deleteAndTranStatus(Integer id, Integer newId,String boardId) {
         if (id.equals(newId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Destination status for task transfer must be different from current status");
         }
@@ -195,7 +196,7 @@ public class StatusV3Service {
             });
         }
 
-        statusV3Repository.delete(status);
+        statusV3Repository.deleteByIdAndBoardId(status.getId(), boardId);
     }
     @Transactional("projectManagementTransactionManager")
     public boolean existsStatusInBoard(String boardId, Integer statusId) {

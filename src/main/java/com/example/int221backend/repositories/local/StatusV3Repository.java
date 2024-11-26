@@ -3,7 +3,9 @@ package com.example.int221backend.repositories.local;
 import com.example.int221backend.entities.local.Board;
 import com.example.int221backend.entities.local.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,5 +28,10 @@ public interface StatusV3Repository extends JpaRepository<Status, Integer> {
 
     @Query("SELECT s FROM Status s WHERE s.board.boardId = :boardId AND s.name = :statusName")
     Status findDefaultStatus(String boardId,String statusName);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Status s WHERE s.id = :statusId AND s.board.boardId = :boardId")
+    void deleteByIdAndBoardId(Integer statusId,String boardId);
 
 }

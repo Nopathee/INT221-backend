@@ -30,7 +30,7 @@ public class Status {
     @JoinColumn(name = "board_id", nullable = false)
     private Board board;
 
-    @OneToMany(mappedBy = "status")
+    @OneToMany(mappedBy = "status", cascade = CascadeType.REMOVE)
     private List<TaskV3> tasks;
 
 }
