@@ -72,6 +72,14 @@ public class BoardController {
             throw new ItemNotFoundException("Board not found !!!");
         }
 
+        // ตรวจสอบว่าผู้ใช้เป็นเจ้าของบอร์ดหรือไม่
+        boolean isOwner = boardDTO.getOwner() != null && boardDTO.getOwner().getUserId().equals(userId);
+
+        if (isOwner) {
+            boardDTO.setAccessRight("OWNER");
+            return ResponseEntity.ok(boardDTO); // ส่งข้อมูลบอร์ดกลับไป
+        }
+
         // ตรวจสอบว่าบอร์ดเป็น public หรือ private
         boolean isPublic = "public".equalsIgnoreCase(boardDTO.getVisibility());
 
@@ -88,15 +96,7 @@ public class BoardController {
 
         String jwtToken = token.substring(7);
         String userId = jwtService.getOidFromToken(jwtToken);
-
-        // ตรวจสอบว่าผู้ใช้เป็นเจ้าของบอร์ดหรือไม่
-        boolean isOwner = boardDTO.getOwner() != null && boardDTO.getOwner().getUserId().equals(userId);
-
-        if (isOwner) {
-            boardDTO.setAccessRight("OWNER");
-            return ResponseEntity.ok(boardDTO); // ส่งข้อมูลบอร์ดกลับไป
-        }
-
+        
         // ตรวจสอบว่า userId เป็น collaborator หรือไม่
         Collaborators collaborator = collabService.findCollaboratorByUserIdAndBoardId(userId, boardId);
         if (collaborator != null) {
