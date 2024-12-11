@@ -77,6 +77,7 @@ public class BoardController {
 
         // ถ้าเป็น public สามารถเข้าถึงได้โดยไม่ต้องใช้ token
         if (isPublic) {
+            boardDTO.setAccessRight("READ");
             return ResponseEntity.ok(boardDTO);
         }
 
