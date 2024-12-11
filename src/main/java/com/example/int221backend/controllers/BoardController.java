@@ -66,46 +66,50 @@ public class BoardController {
             @PathVariable String boardId,
             @RequestHeader(value = "Authorization", required = false) String token
     ) {
+        // ดึงข้อมูลบอร์ด
         BoardDTO boardDTO = boardService.getBoardByBoardId(boardId);
 
         if (boardDTO == null) {
             throw new ItemNotFoundException("Board not found !!!");
         }
 
-        // ตรวจสอบว่าผู้ใช้เป็นเจ้าของบอร์ดหรือไม่
-        boolean isOwner = boardDTO.getOwner() != null && boardDTO.getOwner().getUserId().equals(userId);
-
-        if (isOwner) {
-            boardDTO.setAccessRight("OWNER");
-            return ResponseEntity.ok(boardDTO); // ส่งข้อมูลบอร์ดกลับไป
+        // ตรวจสอบ token (ถ้ามี)
+        String userId = null;
+        if (token != null && token.startsWith("Bearer ")) {
+            String jwtToken = token.substring(7);
+            userId = jwtService.getOidFromToken(jwtToken);
         }
 
-        // ตรวจสอบว่าบอร์ดเป็น public หรือ private
-        boolean isPublic = "public".equalsIgnoreCase(boardDTO.getVisibility());
+        
+        boolean isOwner = boardDTO.getOwner() != null && boardDTO.getOwner().getUserId().equals(userId);
 
-        // ถ้าเป็น public สามารถเข้าถึงได้โดยไม่ต้องใช้ token
+
+        if (isOwner) {
+        // ตรวจสอบว่า user เป็นเจ้าของบอร์ดหรือไม่
+            boardDTO.setAccessRight("OWNER");
+            return ResponseEntity.ok(boardDTO);
+        }
+
+        // ตรวจสอบว่า user เป็น collaborator หรือไม่
+        if (userId != null) {
+            Collaborators collaborator = collabService.findCollaboratorByUserIdAndBoardId(userId, boardId);
+            if (collaborator != null && collaborator.getAccessRight() != null) {
+                boardDTO.setAccessRight(collaborator.getAccessRight().name());
+                return ResponseEntity.ok(boardDTO);
+            }
+        }
+
+        // ตรวจสอบว่า board เป็น public หรือไม่
+        boolean isPublic = "public".equalsIgnoreCase(boardDTO.getVisibility());
         if (isPublic) {
             boardDTO.setAccessRight("READ");
             return ResponseEntity.ok(boardDTO);
         }
 
-        // ถ้าไม่มี token หรือ token ไม่ถูกต้อง ให้ return 403 Forbidden
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied! Private board requires authentication.");
-        }
-
-        String jwtToken = token.substring(7);
-        String userId = jwtService.getOidFromToken(jwtToken);
-        
-        // ตรวจสอบว่า userId เป็น collaborator หรือไม่
-        Collaborators collaborator = collabService.findCollaboratorByUserIdAndBoardId(userId, boardId);
-        if (collaborator != null) {
-            boardDTO.setAccessRight(collaborator.getAccessRight().name()); // ตั้งค่า accessRight สำหรับ collaborator
-            return ResponseEntity.ok(boardDTO); // ส่งข้อมูลบอร์ดกลับไปถ้าเป็น collaborator
-        }
-
+        // กรณีอื่น ๆ (ไม่ได้เป็น owner, collaborator และ board ไม่ใช่ public)
         throw new AccessDeniedException("Access denied");
     }
+
 
 
 
